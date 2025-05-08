@@ -193,17 +193,9 @@ export default function Dashboard() {
     // L'agent vient juste d'atteindre son objectif (passe de positif à négatif)
     if (
       previous >= 0 &&
-      updated[index][type]! < 0 &&
-      !notified.includes(`${updated[index].name}-${type}-objectif`)
-    ) {
-      alert(
-        `🎉 Bravo ${updated[index].name} ! Tu as atteint ton objectif ${
-          type === "currentCRM" ? "CRM" : "Digital"
-        } ! ⭐`
-      );
-      setNotified([...notified, `${updated[index].name}-${type}-objectif`]);
-      
-      // Envoyer une notification de réussite
+      updated[index][type]! < 0
+    ) {      
+      // Envoyer une notification de réussite (sans alerte)
       wsClient.sendActivity(
         "a atteint son objectif",
         `${updated[index].name} (${typeLabel})`,
