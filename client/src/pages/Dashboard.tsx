@@ -4,6 +4,8 @@ import * as XLSX from "xlsx";
 import { TopAgents } from "@/components/TopAgents";
 import { AppointmentSection } from "@/components/AppointmentSection";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { AlertNotifications } from "@/components/AlertNotifications";
+import { AlertSettings } from "@/components/AlertSettings";
 import { Agent, getTopAgents } from "@/lib/agent";
 import { useAuth } from "@/hooks/use-auth";
 import { useTeamPresence } from "@/hooks/use-team-presence";
@@ -462,6 +464,7 @@ export default function Dashboard() {
           </div>
           <div className="lg:col-span-1 space-y-8">
             <ActivityFeed />
+            {isAdmin && <AlertSettings />}
           </div>
         </div>
 
