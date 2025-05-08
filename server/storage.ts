@@ -63,7 +63,7 @@ export class DatabaseStorage implements IStorage {
   
   async getAgentsByCRMStatus(hasCRM: boolean): Promise<Agent[]> {
     if (hasCRM) {
-      return await db.select().from(agents).where(eq(isNull(agents.currentCRM), false));
+      return await db.select().from(agents).where(not(isNull(agents.currentCRM)));
     } else {
       return await db.select().from(agents).where(isNull(agents.currentCRM));
     }
@@ -71,7 +71,7 @@ export class DatabaseStorage implements IStorage {
   
   async getAgentsByDigitalStatus(hasDigital: boolean): Promise<Agent[]> {
     if (hasDigital) {
-      return await db.select().from(agents).where(eq(isNull(agents.currentDigital), false));
+      return await db.select().from(agents).where(not(isNull(agents.currentDigital)));
     } else {
       return await db.select().from(agents).where(isNull(agents.currentDigital));
     }
