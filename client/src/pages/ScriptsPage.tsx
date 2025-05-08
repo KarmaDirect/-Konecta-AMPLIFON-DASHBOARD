@@ -216,6 +216,24 @@ export default function ScriptsPage() {
             </button>
           )}
         </div>
+        <div className="w-full md:w-64">
+          <Select 
+            value={currentTab} 
+            onValueChange={setCurrentTab}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filtrer par campagne" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les scripts</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category.toUpperCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab}>
