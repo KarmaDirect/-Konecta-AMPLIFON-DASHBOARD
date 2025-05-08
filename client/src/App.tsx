@@ -27,7 +27,7 @@ function NavigationBar() {
   return (
     <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-900 to-blue-900 text-white shadow-md sticky top-0 z-10">
       <div className="flex items-center space-x-1">
-        <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-8 bg-white p-1 rounded mr-2" />
+        <img src="attached_assets/Konecta-Logo.png" alt="Konecta" className="h-8 bg-white p-1 rounded mr-2" />
         
         {currentUser && (
           <>
@@ -67,7 +67,7 @@ function NavigationBar() {
             Connexion
           </a>
         )}
-        <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-8 bg-white p-1 rounded ml-2" />
+        <img src="attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-8 bg-white p-1 rounded ml-2" />
       </div>
     </div>
   );
