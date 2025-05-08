@@ -31,7 +31,15 @@ export function AppointmentSection({
   const isCRM = type === "currentCRM";
   const filteredAgents = agents.filter(agent => agent[type] !== null);
   const rdvCompleted = getTotalRdvCompleted(agents, type);
-  const ratioGlobal = rdvTotal > 0 ? rdvCompleted / rdvTotal : 0;
+  
+  // Calcul des RDV bonus
+  const bonusRdv = agents.reduce((sum, a) => {
+    if (a[type] === null || a[type]! >= 0) return sum;
+    return sum + Math.abs(a[type]!);
+  }, 0);
+  
+  // Le ratio global peut dépasser 100% grâce aux RDV bonus
+  const ratioGlobal = rdvTotal > 0 ? Math.min(1, rdvCompleted / rdvTotal) : 0;
   
   const totalAgentHours = filteredAgents.reduce((sum, a) => sum + (a.hours || 1), 0);
 
@@ -69,7 +77,7 @@ export function AppointmentSection({
           className="bg-green-500 h-6 rounded-full text-white text-xs font-semibold flex items-center justify-center transition-all duration-500"
           style={{ width: `${ratioGlobal * 100}%` }}
         >
-          {rdvCompleted} RDV réalisés / {rdvTotal} soit {Math.round(ratioGlobal * 100)}%
+          {rdvCompleted} RDV réalisés {bonusRdv > 0 ? `(dont ${bonusRdv} bonus)` : ''} / {rdvTotal} soit {Math.round(ratioGlobal * 100)}%
         </div>
       </div>
 

@@ -190,17 +190,18 @@ export default function Dashboard() {
       { agent: updated[index].name, delta, type: typeLabel }
     );
 
+    // L'agent vient juste d'atteindre son objectif (passe de positif à négatif)
     if (
       previous >= 0 &&
       updated[index][type]! < 0 &&
-      !notified.includes(`${updated[index].name}-${type}`)
+      !notified.includes(`${updated[index].name}-${type}-objectif`)
     ) {
       alert(
-        `🎉 Bravo ${updated[index].name} ! Tu as dépassé ton objectif ${
+        `🎉 Bravo ${updated[index].name} ! Tu as atteint ton objectif ${
           type === "currentCRM" ? "CRM" : "Digital"
         } ! ⭐`
       );
-      setNotified([...notified, `${updated[index].name}-${type}`]);
+      setNotified([...notified, `${updated[index].name}-${type}-objectif`]);
       
       // Envoyer une notification de réussite
       wsClient.sendActivity(
@@ -208,6 +209,29 @@ export default function Dashboard() {
         `${updated[index].name} (${typeLabel})`,
         { agent: updated[index].name, type: typeLabel }
       );
+    }
+    
+    // L'agent a pris des RDV supplémentaires (bonus)
+    if (updated[index][type]! < 0) {
+      // Calculer le nombre de RDV bonus
+      const bonusRdv = Math.abs(updated[index][type]!);
+      
+      // Afficher une notification spéciale pour les RDV bonus
+      if (delta < 0 && !notified.includes(`${updated[index].name}-${type}-bonus-${bonusRdv}`)) {
+        alert(
+          `⭐⭐ Super ${updated[index].name} ! Tu viens d'ajouter un RDV bonus en ${
+            type === "currentCRM" ? "CRM" : "Digital"
+          } ! Tu as maintenant ${bonusRdv} RDV bonus ! 🚀`
+        );
+        setNotified([...notified, `${updated[index].name}-${type}-bonus-${bonusRdv}`]);
+        
+        // Envoyer une notification d'activité pour le bonus
+        wsClient.sendActivity(
+          "a pris un RDV bonus",
+          `${updated[index].name} (${typeLabel})`,
+          { agent: updated[index].name, type: typeLabel, bonusRdv }
+        );
+      }
     }
   };
 
@@ -268,6 +292,17 @@ export default function Dashboard() {
   const totalCRMRestants = crmAgents.reduce((sum, a) => sum + (a.currentCRM || 0), 0);
   const totalDigital = digitalAgents.reduce((sum, a) => sum + a.objectif, 0);
   const totalDigitalRestants = digitalAgents.reduce((sum, a) => sum + (a.currentDigital || 0), 0);
+  
+  // Calcul des RDV bonus (valeurs négatives) qui s'ajoutent au total
+  const totalCRMBonus = crmAgents.reduce((sum, a) => {
+    if (a.currentCRM === null || a.currentCRM >= 0) return sum;
+    return sum + Math.abs(a.currentCRM);
+  }, 0);
+  
+  const totalDigitalBonus = digitalAgents.reduce((sum, a) => {
+    if (a.currentDigital === null || a.currentDigital >= 0) return sum;
+    return sum + Math.abs(a.currentDigital);
+  }, 0);
 
   const topCRMAgents = getTopAgents(agents, "currentCRM");
   const topDigitalAgents = getTopAgents(agents, "currentDigital");
@@ -325,8 +360,18 @@ export default function Dashboard() {
             <p className="my-1">Objectif total : {totalCRM}</p>
             <p className="my-1">RDV restants : {totalCRMRestants}</p>
             <p className="text-sm text-green-600 font-medium">
-              {totalCRM - totalCRMRestants} RDV réalisés soit {totalCRM > 0 ? Math.round((totalCRM - totalCRMRestants) / totalCRM * 100) : 0}%
+              {totalCRM - totalCRMRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalCRMBonus} bonus</span>
             </p>
+            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
+              <div 
+                className="bg-green-600 h-4 rounded-full" 
+                style={{ 
+                  width: `${Math.min(100, totalCRM > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / totalCRM * 100) : 0)}%`
+                }}
+              >
+              </div>
+            </div>
+            <p className="text-xs mt-1">Progression globale: {totalCRM > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / totalCRM * 100) : 0}%</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-purple-800">💻 Digital - Objectifs Spécifiques</h3>
@@ -334,8 +379,18 @@ export default function Dashboard() {
             <p className="my-1">Objectif total : {totalDigital}</p>
             <p className="my-1">RDV restants : {totalDigitalRestants}</p>
             <p className="text-sm text-green-600 font-medium">
-              {totalDigital - totalDigitalRestants} RDV réalisés soit {totalDigital > 0 ? Math.round((totalDigital - totalDigitalRestants) / totalDigital * 100) : 0}%
+              {totalDigital - totalDigitalRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalDigitalBonus} bonus</span>
             </p>
+            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
+              <div 
+                className="bg-purple-600 h-4 rounded-full" 
+                style={{ 
+                  width: `${Math.min(100, totalDigital > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / totalDigital * 100) : 0)}%`
+                }}
+              >
+              </div>
+            </div>
+            <p className="text-xs mt-1">Progression globale: {totalDigital > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / totalDigital * 100) : 0}%</p>
           </div>
         </div>
 

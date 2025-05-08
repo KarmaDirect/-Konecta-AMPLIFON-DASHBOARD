@@ -43,8 +43,18 @@ export const getBottomAgents = (agents: Agent[], type: "currentCRM" | "currentDi
 export const getTotalRdvCompleted = (agents: Agent[], type: "currentCRM" | "currentDigital"): number => {
   return agents.reduce((sum, a) => {
     if (a[type] === null) return sum;
-    const completed = a.objectif - a[type];
-    return sum + (completed > 0 ? completed : 0);
+    
+    // Si le compteur est positif ou zéro, le calcul est standard : objectif - actuel
+    if (a[type]! >= 0) {
+      const completed = a.objectif - a[type]!;
+      return sum + completed;
+    } 
+    // Si le compteur est négatif, on a atteint l'objectif + des RDV bonus
+    else {
+      const completedRdv = a.objectif;        // L'objectif est complètement atteint
+      const bonusRdv = Math.abs(a[type]!);    // Les RDV bonus (valeur absolue du négatif)
+      return sum + completedRdv + bonusRdv;   // On ajoute l'objectif + les bonus
+    }
   }, 0);
 };
 

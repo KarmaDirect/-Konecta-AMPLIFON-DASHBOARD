@@ -82,7 +82,15 @@ export function AgentCard({
           <div className="text-2xl">{emoji}</div>
         </div>
         <CardDescription>
-          {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: {currentCount || 0} / {agent.objectif}
+          {currentCount !== null && currentCount < 0 ? (
+            <span className="flex items-center">
+              {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: <span className="font-bold text-green-500 ml-1">Objectif atteint</span> + <span className="text-yellow-500 font-bold ml-1">{Math.abs(currentCount)} bonus</span>
+            </span>
+          ) : (
+            <span>
+              {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: {currentCount || 0} / {agent.objectif}
+            </span>
+          )}
         </CardDescription>
         <div className="text-xs mt-1 text-muted-foreground">
           Type: {agent.type} - Objectif: {rdvPerHour} RDV/h
@@ -90,10 +98,19 @@ export function AgentCard({
       </CardHeader>
       <CardContent>
         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
-          <div
-            className="bg-blue-600 h-2.5 rounded-full"
-            style={{ width: `${percentage}%` }}
-          ></div>
+          {currentCount !== null && currentCount < 0 ? (
+            // Si objectif atteint + RDV bonus, barre verte à 100%
+            <div
+              className="bg-gradient-to-r from-green-500 to-yellow-500 h-2.5 rounded-full"
+              style={{ width: '100%' }}
+            ></div>
+          ) : (
+            // Progression normale
+            <div
+              className={`${percentage >= 100 ? 'bg-green-500' : 'bg-blue-600'} h-2.5 rounded-full`}
+              style={{ width: `${percentage}%` }}
+            ></div>
+          )}
         </div>
         
         <div className="flex justify-center items-center mt-3">
