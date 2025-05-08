@@ -1,150 +1,128 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Agent } from '@/lib/types';
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Agent } from "@/lib/types";
 
-// Types pour l'authentification
 type User = Agent;
 
 type AuthContextType = {
   currentUser: User | null;
   isAdmin: boolean;
-  loginMutation: ReturnType<typeof useLoginMutation>;
-  registerMutation: ReturnType<typeof useRegisterMutation>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
 };
 
-// Données pour la connexion
 type LoginData = {
   username: string;
   password: string;
 };
 
-// Données pour l'inscription
 type RegisterData = LoginData & {
   name: string;
   role: "ADMIN" | "AGENT";
 };
 
-// Création du contexte
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Hook personnalisé pour la mutation de connexion
-function useLoginMutation() {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const response = await apiRequest("/api/login", {
-        method: "POST",
-        body: JSON.stringify(credentials),
-        headers: {
-          "Content-Type": "application/json"
-        }
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Charger l'utilisateur depuis localStorage au démarrage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error("Erreur lors du chargement de l'utilisateur:", error);
+        localStorage.removeItem("currentUser");
+      }
+    }
+  }, []);
+
+  const login = async (username: string, password: string) => {
+    try {
+      // Simulation de connexion pour la démo
+      // Dans une vraie application, ce serait une requête API
+      const mockUser: User = {
+        id: 1,
+        name: username,
+        objectif: 10,
+        currentCRM: 0,
+        currentDigital: 0,
+        role: username.toLowerCase().includes("admin") ? "ADMIN" : "AGENT",
+      };
+
+      // Sauvegarde dans localStorage
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
+      setCurrentUser(mockUser);
+
+      toast({
+        title: "Connexion réussie",
+        description: `Bienvenue ${mockUser.name}!`,
       });
-      return response as User;
-    },
-    onError: (error: Error) => {
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
       toast({
         title: "Erreur de connexion",
-        description: error.message || "Nom d'utilisateur ou mot de passe incorrect",
+        description: "Nom d'utilisateur ou mot de passe incorrect.",
         variant: "destructive",
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      throw error;
     }
-  });
-}
+  };
 
-// Hook personnalisé pour la mutation d'inscription
-function useRegisterMutation() {
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (userData: RegisterData) => {
-      const response = await apiRequest("/api/register", {
-        method: "POST",
-        body: JSON.stringify(userData),
-        headers: {
-          "Content-Type": "application/json"
-        }
+  const register = async (userData: RegisterData) => {
+    try {
+      // Simulation d'inscription pour la démo
+      // Dans une vraie application, ce serait une requête API
+      const mockUser: User = {
+        id: 1,
+        name: userData.name,
+        objectif: 10,
+        currentCRM: 0,
+        currentDigital: 0,
+        role: userData.role,
+      };
+
+      // Sauvegarde dans localStorage
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
+      setCurrentUser(mockUser);
+
+      toast({
+        title: "Inscription réussie",
+        description: `Bienvenue ${mockUser.name}!`,
       });
-      return response as User;
-    },
-    onError: (error: Error) => {
+    } catch (error) {
+      console.error("Erreur d'inscription:", error);
       toast({
         title: "Erreur d'inscription",
-        description: error.message || "Impossible de créer le compte",
+        description: "Impossible de créer votre compte.",
         variant: "destructive",
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-    }
-  });
-}
-
-// Provider pour fournir le contexte d'authentification à l'application
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const loginMutation = useLoginMutation();
-  const registerMutation = useRegisterMutation();
-  
-  // Pour l'instant, on simule un utilisateur en dur
-  const mockUser: User = {
-    id: 1,
-    name: "Admin User",
-    objectif: 20,
-    currentCRM: 5,
-    currentDigital: 10,
-    hours: 8,
-    type: "HOT",
-    role: "ADMIN",
-    needsHelp: false
-  };
-
-  // État pour simuler la requête API
-  const [isMockLoading, setIsMockLoading] = useState(true);
-  
-  // Simuler un chargement initial
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMockLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Fonction pour déconnecter l'utilisateur
-  const logout = async () => {
-    try {
-      // Simuler une déconnexion
-      queryClient.setQueryData(["/api/user"], null);
-      queryClient.invalidateQueries();
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      throw error;
     }
   };
 
-  // Si le chargement est en cours, on peut afficher un loader
-  if (isMockLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2">Chargement...</span>
-      </div>
-    );
-  }
+  const logout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    toast({
+      title: "Déconnexion réussie",
+      description: "Vous avez été déconnecté avec succès.",
+    });
+  };
+
+  const isAdmin = currentUser?.role === "ADMIN";
 
   return (
     <AuthContext.Provider
       value={{
-        currentUser: mockUser,
-        isAdmin: mockUser.role === "ADMIN",
-        loginMutation,
-        registerMutation,
+        currentUser,
+        isAdmin,
+        login,
+        register,
         logout,
       }}
     >
@@ -153,7 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Hook pour utiliser le contexte d'authentification
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -162,7 +139,6 @@ export function useAuth() {
   return context;
 }
 
-// Hook simplifié pour vérifier si l'utilisateur est admin
 export function useIsAdmin() {
   const { isAdmin } = useAuth();
   return isAdmin;

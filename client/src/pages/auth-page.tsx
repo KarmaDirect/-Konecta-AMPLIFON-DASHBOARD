@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AuthPage() {
   const { toast } = useToast();
+  const { login, register, currentUser } = useAuth();
   const [loginCredentials, setLoginCredentials] = useState({ username: "", password: "" });
   const [registerCredentials, setRegisterCredentials] = useState({ 
     name: "", 
@@ -19,29 +21,25 @@ export default function AuthPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
+  
+  // Rediriger si déjà connecté
+  if (currentUser) {
+    setLocation("/");
+    return null;
+  }
 
-  // Dans une application réelle, ces fonctions utiliseraient les mutations de React Query
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Ici on simule le login pour le moment
-      setTimeout(() => {
-        setIsLoading(false);
-        toast({
-          title: "Connexion réussie",
-          description: "Vous êtes maintenant connecté",
-        });
-        setLocation("/");
-      }, 1000);
+      await login(loginCredentials.username, loginCredentials.password);
+      setLocation("/");
     } catch (error) {
+      console.error(error);
+      // Les messages d'erreur sont gérés dans le hook useAuth
+    } finally {
       setIsLoading(false);
-      toast({
-        title: "Erreur de connexion",
-        description: "Nom d'utilisateur ou mot de passe incorrect",
-        variant: "destructive",
-      });
     }
   };
 
@@ -60,22 +58,18 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      // Ici on simule le register pour le moment
-      setTimeout(() => {
-        setIsLoading(false);
-        toast({
-          title: "Inscription réussie",
-          description: "Votre compte a été créé avec succès"
-        });
-        setLocation("/");
-      }, 1000);
-    } catch (error) {
-      setIsLoading(false);
-      toast({
-        title: "Erreur d'inscription",
-        description: "Impossible de créer votre compte",
-        variant: "destructive",
+      await register({
+        name: registerCredentials.name,
+        username: registerCredentials.username,
+        password: registerCredentials.password,
+        role: registerCredentials.role
       });
+      setLocation("/");
+    } catch (error) {
+      console.error(error);
+      // Les messages d'erreur sont gérés dans le hook useAuth
+    } finally {
+      setIsLoading(false);
     }
   };
 

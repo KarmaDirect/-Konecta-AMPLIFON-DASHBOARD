@@ -4,8 +4,10 @@ import * as XLSX from "xlsx";
 import { TopAgents } from "@/components/TopAgents";
 import { AppointmentSection } from "@/components/AppointmentSection";
 import { Agent, getTopAgents } from "@/lib/agent";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
+  const { currentUser, logout } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [notified, setNotified] = useState<string[]>([]);
   const [newAgent, setNewAgent] = useState("");
@@ -15,6 +17,12 @@ export default function Dashboard() {
   const [rdvCRMTotal, setRdvCRMTotal] = useState(100);
   const [rdvDigitalTotal, setRdvDigitalTotal] = useState(50);
   const [agentType, setAgentType] = useState<"HOT" | "PROSPECT" | "DIGI">("HOT");
+  
+  const handleLogout = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+      logout();
+    }
+  };
 
   // Load agents from localStorage on component mount
   useEffect(() => {
@@ -178,12 +186,31 @@ export default function Dashboard() {
             <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e7/Konecta_Logo_2021.svg/512px-Konecta_Logo_2021.svg.png" alt="Konecta" className="h-12" />
           </div>
           <div className="flex items-center gap-4">
-            <a 
-              href="/auth" 
-              className="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md"
-            >
-              🔑 Connexion
-            </a>
+            {currentUser ? (
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-semibold text-gray-700">
+                    {currentUser.name}
+                  </span>
+                  <span className="text-xs text-blue-600">
+                    {currentUser.role === "ADMIN" ? "Superviseur" : "Agent"}
+                  </span>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="inline-block px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-md"
+                >
+                  🚪 Déconnexion
+                </button>
+              </div>
+            ) : (
+              <a 
+                href="/auth" 
+                className="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md"
+              >
+                🔑 Connexion
+              </a>
+            )}
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Amplifon_logo.svg/512px-Amplifon_logo.svg.png" alt="Amplifon" className="h-10" />
           </div>
         </div>
