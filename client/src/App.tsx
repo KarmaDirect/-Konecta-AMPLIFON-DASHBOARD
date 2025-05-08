@@ -5,9 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { useRealtimeAgents } from "@/hooks/use-realtime-agents";
+import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
+import AuthPage from "@/pages/auth-page";
 
 // Composant pour connecter les WebSockets au démarrage
 function WebSocketConnector() {
@@ -18,8 +20,9 @@ function WebSocketConnector() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/grand-ecran" component={GrandEcran} />
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/grand-ecran" component={GrandEcran} />
       <Route component={NotFound} />
     </Switch>
   );
