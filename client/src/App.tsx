@@ -10,7 +10,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
-import GrandEcranNew from "@/pages/GrandEcranNew";
+import GrandEcranSimple from "@/pages/GrandEcranSimple";
 import ScriptsPage from "@/pages/ScriptsPage";
 import AuthPage from "@/pages/auth-page";
 
@@ -66,7 +66,7 @@ function Router() {
     <Switch>
       <Route path="/scripts" component={ScriptsPage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/grand-ecran" component={GrandEcranNew} />
+      <Route path="/grand-ecran" component={GrandEcranSimple} />
       <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
