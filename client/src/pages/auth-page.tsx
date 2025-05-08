@@ -80,6 +80,10 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         <div className="order-2 md:order-1">
+          <div className="flex justify-between items-center mb-6 w-full max-w-md mx-auto">
+            <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-12 bg-white p-1 rounded" />
+            <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
+          </div>
           <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login">Connexion</TabsTrigger>
@@ -198,18 +202,7 @@ export default function AuthPage() {
         </div>
 
         <div className="order-1 md:order-2 text-center md:text-left">
-          <div className="mb-8 flex justify-center md:justify-start">
-            <img 
-              src="/Konecta-Logo.png" 
-              alt="Konecta" 
-              className="h-12 mr-4" 
-            />
-            <img 
-              src="/Amplifon-Logo.png" 
-              alt="Amplifon" 
-              className="h-10" 
-            />
-          </div>
+          {/* Les logos sont déjà affichés au-dessus du formulaire pour maintenir une interface cohérente */}
           <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
             Mission RDV Master
           </h1>
