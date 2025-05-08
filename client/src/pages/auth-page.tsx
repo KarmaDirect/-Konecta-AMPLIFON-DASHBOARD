@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,12 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   
   // Rediriger si déjà connecté
-  if (currentUser) {
-    setLocation("/");
-    return null;
-  }
+  // Utiliser un useEffect pour éviter l'erreur de mise à jour pendant le rendu
+  useEffect(() => {
+    if (currentUser) {
+      setLocation("/");
+    }
+  }, [currentUser, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

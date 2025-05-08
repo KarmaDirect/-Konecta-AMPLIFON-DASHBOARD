@@ -93,10 +93,10 @@ export function AgentCard({
         </div>
         <CardDescription>
           {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: {currentCount || 0} / {agent.objectif}
-          <div className="text-xs mt-1 text-muted-foreground">
-            Type: {agent.type} - Objectif: {rdvPerHour} RDV/h
-          </div>
         </CardDescription>
+        <div className="text-xs mt-1 text-muted-foreground">
+          Type: {agent.type} - Objectif: {rdvPerHour} RDV/h
+        </div>
       </CardHeader>
       <CardContent>
         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
