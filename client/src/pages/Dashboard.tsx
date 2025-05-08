@@ -174,8 +174,18 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 p-4 md:p-6 space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
-          <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e7/Konecta_Logo_2021.svg/512px-Konecta_Logo_2021.svg.png" alt="Konecta" className="h-12" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Amplifon_logo.svg/512px-Amplifon_logo.svg.png" alt="Amplifon" className="h-10" />
+          <div className="flex items-center">
+            <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e7/Konecta_Logo_2021.svg/512px-Konecta_Logo_2021.svg.png" alt="Konecta" className="h-12" />
+          </div>
+          <div className="flex items-center gap-4">
+            <a 
+              href="/auth" 
+              className="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md"
+            >
+              🔑 Connexion
+            </a>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Amplifon_logo.svg/512px-Amplifon_logo.svg.png" alt="Amplifon" className="h-10" />
+          </div>
         </div>
 
         <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 Mission RDV Master : Suivi Agents CRM & Digitaux</h1>
