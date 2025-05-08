@@ -10,6 +10,7 @@ import { Agent, getTopAgents } from "@/lib/agent";
 import { useAuth } from "@/hooks/use-auth";
 import { useTeamPresence } from "@/hooks/use-team-presence";
 import { wsClient } from "@/lib/websocket";
+import { TeamPresenceIndicator } from "@/components/TeamPresenceIndicator";
 
 export default function Dashboard() {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -465,6 +466,9 @@ export default function Dashboard() {
           <div className="lg:col-span-1 space-y-8">
             <ActivityFeed />
             {isAdmin && <AlertSettings />}
+            <div className="mt-8 flex justify-end">
+              <TeamPresenceIndicator />
+            </div>
           </div>
         </div>
 
