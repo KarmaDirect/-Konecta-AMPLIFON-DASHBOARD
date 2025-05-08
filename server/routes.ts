@@ -357,6 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API pour les scripts de campagne
+  // Route générale pour tous les scripts
   app.get("/api/campaign-scripts", async (req: Request, res: Response) => {
     try {
       const scripts = await storage.getCampaignScripts();
@@ -367,25 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/campaign-scripts/:id", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ error: "ID invalide" });
-      }
-      
-      const script = await storage.getCampaignScriptById(id);
-      if (!script) {
-        return res.status(404).json({ error: "Script non trouvé" });
-      }
-      
-      res.json(script);
-    } catch (error) {
-      console.error("Erreur lors de la récupération du script:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération du script" });
-    }
-  });
-
+  // Routes spécifiques avec des segments de chemin fixes (doivent être AVANT les routes avec paramètres)
   app.get("/api/campaign-scripts/category/:category", async (req: Request, res: Response) => {
     try {
       const category = req.params.category;
@@ -405,6 +388,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur lors de la récupération des scripts par campagne:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des scripts par campagne" });
+    }
+  });
+
+  // Route par ID (doit être APRÈS les routes spécifiques)
+  app.get("/api/campaign-scripts/:id([0-9]+)", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const script = await storage.getCampaignScriptById(id);
+      if (!script) {
+        return res.status(404).json({ error: "Script non trouvé" });
+      }
+      
+      res.json(script);
+    } catch (error) {
+      console.error("Erreur lors de la récupération du script:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du script" });
     }
   });
 
