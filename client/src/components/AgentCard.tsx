@@ -80,10 +80,10 @@ export function AgentCard({
   };
 
   return (
-    <Card className={`relative overflow-hidden ${agent.needsHelp ? 'border-orange-500 border-2' : ''}`}>
+    <Card className={`relative overflow-hidden ${agent.needsHelp ? 'border-2 border-red-500 help-pulse' : ''}`}>
       {agent.needsHelp && (
         <div className="absolute right-2 top-2">
-          <AlertTriangle className="h-5 w-5 text-orange-500" />
+          <AlertTriangle className="h-5 w-5 text-red-500" />
         </div>
       )}
       <CardHeader>

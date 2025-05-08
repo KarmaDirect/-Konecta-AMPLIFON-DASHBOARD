@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes pulse-red {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    border-color: rgba(255, 0, 0, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+    border-color: rgba(255, 0, 0, 1);
+  }
+}
+
+.help-pulse {
+  animation: pulse-red 1.5s infinite;
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;
