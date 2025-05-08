@@ -1,0 +1,320 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import * as XLSX from "xlsx";
+import { TopAgents } from "@/components/TopAgents";
+import { AppointmentSection } from "@/components/AppointmentSection";
+import { Agent, getTopAgents } from "@/lib/agent";
+
+export default function Dashboard() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [notified, setNotified] = useState<string[]>([]);
+  const [newAgent, setNewAgent] = useState("");
+  const [isCRM, setIsCRM] = useState(true);
+  const [isDigital, setIsDigital] = useState(true);
+  const [newObjective, setNewObjective] = useState(20);
+  const [rdvCRMTotal, setRdvCRMTotal] = useState(100);
+  const [rdvDigitalTotal, setRdvDigitalTotal] = useState(50);
+
+  // Load agents from localStorage on component mount
+  useEffect(() => {
+    const savedAgents = localStorage.getItem('rdvMasterAgents');
+    if (savedAgents) {
+      try {
+        setAgents(JSON.parse(savedAgents));
+      } catch (e) {
+        console.error("Failed to parse saved agents:", e);
+      }
+    }
+  }, []);
+
+  // Save agents to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('rdvMasterAgents', JSON.stringify(agents));
+  }, [agents]);
+
+  const addAgent = () => {
+    if (newAgent.trim()) {
+      if (!isCRM && !isDigital) {
+        alert("L'agent doit être assigné à au moins un type de RDV (CRM ou Digital)");
+        return;
+      }
+
+      const newEntry: Agent = {
+        name: newAgent.trim(),
+        objectif: Number(newObjective),
+        currentCRM: isCRM ? Number(newObjective) : null,
+        currentDigital: isDigital ? Number(newObjective) : null,
+        hours: 1
+      };
+      setAgents([...agents, newEntry]);
+      setNewAgent("");
+      setNewObjective(20);
+      setIsCRM(true);
+      setIsDigital(true);
+    }
+  };
+
+  const removeAgent = (index: number) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${agents[index].name} ?`)) {
+      const updated = [...agents];
+      updated.splice(index, 1);
+      setAgents(updated);
+    }
+  };
+
+  const resetAgents = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir réinitialiser tous les compteurs ?")) {
+      setAgents((prev) =>
+        prev.map((a) => ({
+          ...a,
+          currentCRM: a.currentCRM !== null ? a.objectif : null,
+          currentDigital: a.currentDigital !== null ? a.objectif : null
+        }))
+      );
+      setNotified([]);
+    }
+  };
+
+  const dispatchRdv = (type: "currentCRM" | "currentDigital") => {
+    const rdvTotal = type === "currentCRM" ? rdvCRMTotal : rdvDigitalTotal;
+    const filteredAgents = agents.filter((a) => a[type] !== null);
+    const agentCount = filteredAgents.length;
+
+    if (agentCount === 0) {
+      alert(`Aucun agent ${type === "currentCRM" ? "CRM" : "Digital"} disponible pour dispatcher les RDV.`);
+      return;
+    }
+
+    const rdvPerAgent = Math.floor(rdvTotal / agentCount);
+    const remainder = rdvTotal % agentCount;
+
+    const updated = agents.map((a, i) => {
+      if (a[type] === null) return a;
+      
+      // Find the index of this agent in the filtered list
+      const filteredIndex = filteredAgents.findIndex(fa => fa === a);
+      const bonus = filteredIndex < remainder ? 1 : 0;
+      const objectif = rdvPerAgent + bonus;
+      
+      return {
+        ...a,
+        objectif,
+        [type]: objectif
+      };
+    });
+
+    setAgents(updated);
+  };
+
+  const updateCount = (index: number, delta: number, type: "currentCRM" | "currentDigital") => {
+    const updated = [...agents];
+    const previous = updated[index][type];
+    
+    if (previous === null) return;
+    
+    updated[index][type] = previous + delta;
+    setAgents(updated);
+
+    if (
+      previous >= 0 &&
+      updated[index][type]! < 0 &&
+      !notified.includes(`${updated[index].name}-${type}`)
+    ) {
+      alert(
+        `🎉 Bravo ${updated[index].name} ! Tu as dépassé ton objectif ${
+          type === "currentCRM" ? "CRM" : "Digital"
+        } ! ⭐`
+      );
+      setNotified([...notified, `${updated[index].name}-${type}`]);
+    }
+  };
+
+  const updateAgentHours = (index: number, hours: number) => {
+    const updated = [...agents];
+    updated[index].hours = hours;
+    setAgents(updated);
+  };
+
+  const exportToExcel = () => {
+    if (agents.length === 0) {
+      alert("Il n'y a pas d'agents à exporter.");
+      return;
+    }
+    
+    const ws = XLSX.utils.json_to_sheet(
+      agents.map((a) => ({
+        Agent: a.name,
+        Objectif: a.objectif,
+        "RDV CRM Restants": a.currentCRM,
+        "RDV Digitaux Restants": a.currentDigital,
+        "Heures de travail": a.hours || 1
+      }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "RDV Agents");
+    XLSX.writeFile(wb, "Suivi_RDV_Agents_CRM_Digital.xlsx");
+  };
+
+  const crmAgents = agents.filter((a) => a.currentCRM !== null);
+  const digitalAgents = agents.filter((a) => a.currentDigital !== null);
+
+  const totalCRM = crmAgents.reduce((sum, a) => sum + a.objectif, 0);
+  const totalCRMRestants = crmAgents.reduce((sum, a) => sum + (a.currentCRM || 0), 0);
+  const totalDigital = digitalAgents.reduce((sum, a) => sum + a.objectif, 0);
+  const totalDigitalRestants = digitalAgents.reduce((sum, a) => sum + (a.currentDigital || 0), 0);
+
+  const topCRMAgents = getTopAgents(agents, "currentCRM");
+  const topDigitalAgents = getTopAgents(agents, "currentDigital");
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 p-4 md:p-6 space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex justify-between items-center">
+          <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e7/Konecta_Logo_2021.svg/512px-Konecta_Logo_2021.svg.png" alt="Konecta" className="h-12" />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Amplifon_logo.svg/512px-Amplifon_logo.svg.png" alt="Amplifon" className="h-10" />
+        </div>
+
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 Mission RDV Master : Suivi Agents CRM & Digitaux</h1>
+
+        <div className="text-center">
+          <a href="/grand-ecran" className="inline-block mt-2 px-4 py-2 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 shadow-md">
+            🖥️ Accéder au Grand Écran Avancé
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center bg-gray-100 p-4 rounded-xl border-2 border-blue-300 shadow-md">
+          <div>
+            <h3 className="text-lg font-semibold text-blue-800">📋 CRM - Objectifs Spécifiques</h3>
+            <p className="my-1">Total agents : {crmAgents.length}</p>
+            <p className="my-1">Objectif total : {totalCRM}</p>
+            <p className="my-1">RDV restants : {totalCRMRestants}</p>
+            <p className="text-sm text-green-600 font-medium">
+              {totalCRM - totalCRMRestants} RDV réalisés soit {totalCRM > 0 ? Math.round((totalCRM - totalCRMRestants) / totalCRM * 100) : 0}%
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-purple-800">💻 Digital - Objectifs Spécifiques</h3>
+            <p className="my-1">Total agents : {digitalAgents.length}</p>
+            <p className="my-1">Objectif total : {totalDigital}</p>
+            <p className="my-1">RDV restants : {totalDigitalRestants}</p>
+            <p className="text-sm text-green-600 font-medium">
+              {totalDigital - totalDigitalRestants} RDV réalisés soit {totalDigital > 0 ? Math.round((totalDigital - totalDigitalRestants) / totalDigital * 100) : 0}%
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center bg-blue-100 p-5 rounded-xl space-y-4 shadow-md">
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl">
+            <input 
+              type="text" 
+              value={newAgent} 
+              onChange={(e) => setNewAgent(e.target.value)} 
+              placeholder="Nom de l'agent" 
+              className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto flex-grow"
+            />
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isCRM} 
+                    onChange={() => setIsCRM(!isCRM)} 
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                  />
+                  <span>CRM</span>
+                </label>
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isDigital} 
+                    onChange={() => setIsDigital(!isDigital)} 
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" 
+                  />
+                  <span>Digital</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="objective-input" className="whitespace-nowrap">Objectif:</label>
+                <input 
+                  id="objective-input"
+                  type="number" 
+                  min="1" 
+                  className="border border-gray-300 px-3 py-1 rounded-lg w-16 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={newObjective}
+                  onChange={(e) => setNewObjective(parseInt(e.target.value) || 1)}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button 
+              onClick={addAgent}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+            >
+              ➕ Ajouter un agent
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={resetAgents}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+            >
+              🔄 Réinitialiser tous les compteurs
+            </Button>
+            <Button 
+              onClick={exportToExcel}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-file-earmark-excel" viewBox="0 0 16 16">
+                <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
+                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+              </svg>
+              Exporter vers Excel
+            </Button>
+          </div>
+        </div>
+
+        <TopAgents 
+          title="🏅 Top 3 CRM" 
+          agents={topCRMAgents}
+          type="currentCRM"
+        />
+
+        <AppointmentSection
+          title="📋 RDV CRM"
+          agents={agents}
+          type="currentCRM"
+          rdvTotal={rdvCRMTotal}
+          setRdvTotal={setRdvCRMTotal}
+          onDispatchRdv={dispatchRdv}
+          onRemoveAgent={removeAgent}
+          onUpdateCount={updateCount}
+          onUpdateHours={updateAgentHours}
+        />
+
+        <TopAgents 
+          title="🏅 Top 3 Digitaux" 
+          agents={topDigitalAgents}
+          type="currentDigital"
+        />
+
+        <AppointmentSection
+          title="💻 RDV Digitaux"
+          agents={agents}
+          type="currentDigital"
+          rdvTotal={rdvDigitalTotal}
+          setRdvTotal={setRdvDigitalTotal}
+          onDispatchRdv={dispatchRdv}
+          onRemoveAgent={removeAgent}
+          onUpdateCount={updateCount}
+          onUpdateHours={updateAgentHours}
+        />
+
+        <div className="text-center pt-8 pb-4">
+          <p className="text-sm text-gray-500">
+            Mission RDV Master - Développé pour Konecta & Amplifon - version 1.0
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
