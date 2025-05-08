@@ -3,7 +3,8 @@ import {
   agents, type Agent, type InsertAgent,
   achievements, type Achievement, type InsertAchievement,
   activityLogs, type ActivityLog, type InsertActivityLog,
-  campaignScripts, type CampaignScript, type InsertCampaignScript
+  campaignScripts, type CampaignScript, type InsertCampaignScript,
+  alertThresholds, type AlertThreshold, type InsertAlertThreshold
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull, desc, not } from "drizzle-orm";
@@ -44,6 +45,15 @@ export interface IStorage {
   createCampaignScript(script: InsertCampaignScript): Promise<CampaignScript>;
   updateCampaignScript(id: number, script: Partial<InsertCampaignScript>): Promise<CampaignScript | undefined>;
   deleteCampaignScript(id: number): Promise<boolean>;
+  
+  // Alertes et Notifications
+  getAlertThresholds(): Promise<AlertThreshold[]>;
+  getAlertThresholdsByUserId(userId: number): Promise<AlertThreshold[]>;
+  getAlertThresholdById(id: number): Promise<AlertThreshold | undefined>;
+  createAlertThreshold(alertThreshold: InsertAlertThreshold): Promise<AlertThreshold>;
+  updateAlertThreshold(id: number, alertThreshold: Partial<InsertAlertThreshold>): Promise<AlertThreshold | undefined>;
+  deleteAlertThreshold(id: number): Promise<boolean>;
+  checkAlerts(agentId: number, type: string): Promise<AlertThreshold[]>;
 }
 
 // Implémentation de l'interface avec la base de données PostgreSQL via Drizzle
@@ -256,6 +266,120 @@ export class DatabaseStorage implements IStorage {
   async deleteCampaignScript(id: number): Promise<boolean> {
     await db.delete(campaignScripts).where(eq(campaignScripts.id, id));
     return true;
+  }
+
+  // Alertes et notifications
+  async getAlertThresholds(): Promise<AlertThreshold[]> {
+    return await db
+      .select()
+      .from(alertThresholds)
+      .orderBy(alertThresholds.thresholdValue);
+  }
+
+  async getAlertThresholdsByUserId(userId: number): Promise<AlertThreshold[]> {
+    return await db
+      .select()
+      .from(alertThresholds)
+      .where(eq(alertThresholds.userId, userId))
+      .orderBy(alertThresholds.thresholdValue);
+  }
+
+  async getAlertThresholdById(id: number): Promise<AlertThreshold | undefined> {
+    const [threshold] = await db
+      .select()
+      .from(alertThresholds)
+      .where(eq(alertThresholds.id, id));
+    return threshold;
+  }
+
+  async createAlertThreshold(alertThreshold: InsertAlertThreshold): Promise<AlertThreshold> {
+    const now = new Date();
+    const [createdThreshold] = await db
+      .insert(alertThresholds)
+      .values({
+        ...alertThreshold,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    return createdThreshold;
+  }
+
+  async updateAlertThreshold(id: number, alertThreshold: Partial<InsertAlertThreshold>): Promise<AlertThreshold | undefined> {
+    const now = new Date();
+    const [updatedThreshold] = await db
+      .update(alertThresholds)
+      .set({
+        ...alertThreshold,
+        updatedAt: now
+      })
+      .where(eq(alertThresholds.id, id))
+      .returning();
+    return updatedThreshold;
+  }
+
+  async deleteAlertThreshold(id: number): Promise<boolean> {
+    await db.delete(alertThresholds).where(eq(alertThresholds.id, id));
+    return true;
+  }
+
+  async checkAlerts(agentId: number, type: string): Promise<AlertThreshold[]> {
+    // Récupérer l'agent et ses seuils d'alerte
+    const agent = await this.getAgentById(agentId);
+    if (!agent) return [];
+
+    const userThresholds = await this.getAlertThresholdsByUserId(agentId);
+    
+    // Déterminer la valeur actuelle et l'objectif en fonction du type
+    let currentValue = 0;
+    let objectiveValue = agent.objectif;
+
+    if (type === "CRM" && agent.currentCRM !== null) {
+      currentValue = agent.currentCRM;
+    } else if (type === "Digital" && agent.currentDigital !== null) {
+      currentValue = agent.currentDigital;
+    } else {
+      return [];
+    }
+
+    // Calculer le pourcentage d'avancement
+    const completion = (objectiveValue - currentValue) / objectiveValue * 100;
+    
+    // Filtrer les alertes qui correspondent aux seuils atteints
+    const triggeredAlerts = userThresholds.filter(threshold => {
+      // Ne traiter que les alertes actives pour ce type de RDV
+      if (!threshold.isActive || (threshold.appointmentType !== type && threshold.appointmentType !== "Both")) {
+        return false;
+      }
+
+      if (threshold.thresholdType === "percentage") {
+        switch (threshold.alertType) {
+          case "objective_approaching":
+            return completion >= threshold.thresholdValue;
+          case "objective_reached":
+            return completion >= 100;
+          case "objective_exceeded":
+            return completion > 100;
+          default:
+            return false;
+        }
+      } else if (threshold.thresholdType === "absolute") {
+        switch (threshold.alertType) {
+          case "objective_approaching":
+            return (objectiveValue - currentValue) <= threshold.thresholdValue;
+          case "objective_reached":
+            return (objectiveValue - currentValue) <= 0;
+          case "objective_exceeded":
+            return (objectiveValue - currentValue) < 0;
+          default:
+            return false;
+        }
+      }
+      
+      return false;
+    });
+
+    return triggeredAlerts;
   }
 }
 

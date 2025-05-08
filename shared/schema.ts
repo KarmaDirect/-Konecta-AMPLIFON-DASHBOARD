@@ -130,6 +130,38 @@ export const insertCampaignScriptSchema = createInsertSchema(campaignScripts).pi
 
 export type InsertCampaignScript = z.infer<typeof insertCampaignScriptSchema>;
 
+// Table pour les alertes personnalisées
+export const alertThresholds = pgTable("alert_thresholds", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  thresholdType: text("threshold_type").notNull(), // "percentage", "absolute"
+  thresholdValue: integer("threshold_value").notNull(), // 90 pour 90% ou valeur absolue
+  alertType: text("alert_type").notNull(), // "objective_approaching", "objective_reached", "objective_exceeded"
+  appointmentType: text("appointment_type").notNull(), // "CRM", "Digital" ou "Both"
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const alertThresholdsRelations = relations(alertThresholds, ({ one }) => ({
+  user: one(agents, {
+    fields: [alertThresholds.userId],
+    references: [agents.id],
+  })
+}));
+
+export const insertAlertThresholdSchema = createInsertSchema(alertThresholds).pick({
+  userId: true,
+  thresholdType: true,
+  thresholdValue: true,
+  alertType: true,
+  appointmentType: true,
+  isActive: true
+});
+
+export type InsertAlertThreshold = z.infer<typeof insertAlertThresholdSchema>;
+export type AlertThreshold = typeof alertThresholds.$inferSelect;
+
 // Types d'inférence
 export type Agent = typeof agents.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
