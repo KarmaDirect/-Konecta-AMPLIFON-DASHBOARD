@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
-import { insertAgentSchema, insertAchievementSchema } from "@shared/schema";
+import { insertAgentSchema, insertAchievementSchema, insertActivityLogSchema } from "@shared/schema";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -80,6 +80,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // API pour les agents
+  // Endpoint pour la demande d'aide
+  app.put("/api/agents/:id/help", async (req: any, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const needsHelp = req.body.needsHelp === true;
+      
+      const agent = await storage.toggleHelpRequest(id, needsHelp);
+      
+      if (!agent) {
+        return res.status(404).json({ error: "Agent non trouvé" });
+      }
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'agent_updated',
+        data: { agent }
+      });
+      
+      res.json(agent);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la demande d'aide:", error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour de la demande d'aide" });
+    }
+  });
+  
+  // API pour les logs d'activité
+  app.get("/api/activity-logs", async (req: Request, res: Response) => {
+    try {
+      const logs = await storage.getActivityLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des logs d'activité:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des logs d'activité" });
+    }
+  });
+  
+  app.get("/api/activity-logs/agent/:agentId", async (req: Request, res: Response) => {
+    try {
+      const agentId = parseInt(req.params.agentId);
+      if (isNaN(agentId)) {
+        return res.status(400).json({ error: "ID agent invalide" });
+      }
+      
+      const logs = await storage.getActivityLogsByAgentId(agentId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des logs d'activité de l'agent:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des logs d'activité de l'agent" });
+    }
+  });
+  
+  app.post("/api/activity-logs", async (req: any, res: Response) => {
+    try {
+      const validatedData = insertActivityLogSchema.parse(req.body);
+      const log = await storage.createActivityLog(validatedData);
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'activity_log_created',
+        data: { log }
+      });
+      
+      res.status(201).json(log);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Erreur lors de la création du log d'activité:", error);
+        res.status(500).json({ error: "Erreur lors de la création du log d'activité" });
+      }
+    }
+  });
   app.get("/api/agents", async (req: Request, res: Response) => {
     try {
       const agents = await storage.getAgents();

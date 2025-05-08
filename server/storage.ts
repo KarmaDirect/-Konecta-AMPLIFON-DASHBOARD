@@ -1,7 +1,8 @@
 import { 
   users, type User, type InsertUser,
   agents, type Agent, type InsertAgent,
-  achievements, type Achievement, type InsertAchievement
+  achievements, type Achievement, type InsertAchievement,
+  activityLogs, type ActivityLog, type InsertActivityLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull, desc, not } from "drizzle-orm";
@@ -22,11 +23,17 @@ export interface IStorage {
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, agent: Partial<InsertAgent>): Promise<Agent | undefined>;
   deleteAgent(id: number): Promise<boolean>;
+  toggleHelpRequest(id: number, needsHelp: boolean): Promise<Agent | undefined>;
   
   // Réalisations
   getAchievements(): Promise<Achievement[]>;
   getAchievementsByAgentId(agentId: number): Promise<Achievement[]>;
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  
+  // Logs d'activité
+  getActivityLogs(): Promise<ActivityLog[]>;
+  getActivityLogsByAgentId(agentId: number): Promise<ActivityLog[]>;
+  createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
 }
 
 // Implémentation de l'interface avec la base de données PostgreSQL via Drizzle
@@ -127,6 +134,55 @@ export class DatabaseStorage implements IStorage {
       .values(achievement)
       .returning();
     return createdAchievement;
+  }
+  
+  // Méthode spécifique pour gérer les demandes d'aide
+  async toggleHelpRequest(id: number, needsHelp: boolean): Promise<Agent | undefined> {
+    const [updatedAgent] = await db
+      .update(agents)
+      .set({
+        needsHelp,
+        updatedAt: new Date()
+      })
+      .where(eq(agents.id, id))
+      .returning();
+      
+    // Créer un log pour cette action
+    const action = needsHelp ? "Demande d'aide activée" : "Demande d'aide désactivée";
+    await this.createActivityLog({
+      agentId: id,
+      action,
+      details: `L'agent a ${needsHelp ? "demandé" : "annulé sa demande d'"} aide`
+    });
+    
+    return updatedAgent;
+  }
+  
+  // Logs d'activité
+  async getActivityLogs(): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .orderBy(desc(activityLogs.timestamp));
+  }
+  
+  async getActivityLogsByAgentId(agentId: number): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.agentId, agentId))
+      .orderBy(desc(activityLogs.timestamp));
+  }
+  
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
+    const [createdLog] = await db
+      .insert(activityLogs)
+      .values({
+        ...log,
+        timestamp: new Date()
+      })
+      .returning();
+    return createdLog;
   }
 }
 

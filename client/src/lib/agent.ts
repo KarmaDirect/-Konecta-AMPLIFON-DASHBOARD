@@ -1,11 +1,6 @@
-export interface Agent {
-  name: string;
-  objectif: number;
-  currentCRM: number | null;
-  currentDigital: number | null;
-  hours?: number;
-  type?: "HOT" | "PROSPECT" | "DIGI";
-}
+import { Agent } from './types';
+
+export type { Agent };
 
 export const getEmoji = (current: number | null, objectif: number): string => {
   if (current === null) return "🕓";

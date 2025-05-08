@@ -21,6 +21,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Définition de l'énumération pour les rôles d'utilisateurs
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "AGENT"]);
+
 // Table des agents
 export const agents = pgTable("agents", {
   id: serial("id").primaryKey(),
@@ -30,6 +33,8 @@ export const agents = pgTable("agents", {
   currentDigital: integer("current_digital"),
   hours: integer("hours").notNull().default(1),
   type: agentTypeEnum("agent_type").notNull().default("HOT"),
+  needsHelp: boolean("needs_help").default(false),
+  role: userRoleEnum("user_role").notNull().default("AGENT"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -55,6 +60,22 @@ export const achievementsRelations = relations(achievements, ({ one }) => ({
   }),
 }));
 
+// Table des logs d'activité
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  action: text("action").notNull(),
+  details: text("details"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  agent: one(agents, {
+    fields: [activityLogs.agentId],
+    references: [agents.id],
+  }),
+}));
+
 // Schemas pour les insertions
 export const insertAgentSchema = createInsertSchema(agents).pick({
   name: true,
@@ -63,6 +84,8 @@ export const insertAgentSchema = createInsertSchema(agents).pick({
   currentDigital: true,
   hours: true,
   type: true,
+  needsHelp: true,
+  role: true,
 });
 
 export const insertAchievementSchema = createInsertSchema(achievements).pick({
@@ -72,10 +95,18 @@ export const insertAchievementSchema = createInsertSchema(achievements).pick({
   appointmentsTotal: true,
 });
 
+export const insertActivityLogSchema = createInsertSchema(activityLogs).pick({
+  agentId: true,
+  action: true,
+  details: true,
+});
+
 // Types d'insertion
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 // Types d'inférence
 export type Agent = typeof agents.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
+export type ActivityLog = typeof activityLogs.$inferSelect;
