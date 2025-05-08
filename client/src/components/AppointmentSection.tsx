@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Agent, getTotalRdvCompleted } from "@/lib/agent";
 import { AgentCard } from "./AgentCard";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AppointmentSectionProps {
   title: string;

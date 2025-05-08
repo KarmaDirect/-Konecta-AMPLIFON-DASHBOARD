@@ -247,87 +247,89 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center bg-blue-100 p-5 rounded-xl space-y-4 shadow-md">
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl">
-            <input 
-              type="text" 
-              value={newAgent} 
-              onChange={(e) => setNewAgent(e.target.value)} 
-              placeholder="Nom de l'agent" 
-              className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto flex-grow"
-            />
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1 cursor-pointer">
+        {isAdmin && (
+          <div className="flex flex-col items-center bg-blue-100 p-5 rounded-xl space-y-4 shadow-md">
+            <div className="flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl">
+              <input 
+                type="text" 
+                value={newAgent} 
+                onChange={(e) => setNewAgent(e.target.value)} 
+                placeholder="Nom de l'agent" 
+                className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto flex-grow"
+              />
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isCRM} 
+                      onChange={() => setIsCRM(!isCRM)} 
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                    />
+                    <span>CRM</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isDigital} 
+                      onChange={() => setIsDigital(!isDigital)} 
+                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" 
+                    />
+                    <span>Digital</span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="objective-input" className="whitespace-nowrap">Objectif:</label>
                   <input 
-                    type="checkbox" 
-                    checked={isCRM} 
-                    onChange={() => setIsCRM(!isCRM)} 
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                    id="objective-input"
+                    type="number" 
+                    min="1" 
+                    className="border border-gray-300 px-3 py-1 rounded-lg w-16 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={newObjective}
+                    onChange={(e) => setNewObjective(parseInt(e.target.value) || 1)}
                   />
-                  <span>CRM</span>
-                </label>
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={isDigital} 
-                    onChange={() => setIsDigital(!isDigital)} 
-                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" 
-                  />
-                  <span>Digital</span>
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="objective-input" className="whitespace-nowrap">Objectif:</label>
-                <input 
-                  id="objective-input"
-                  type="number" 
-                  min="1" 
-                  className="border border-gray-300 px-3 py-1 rounded-lg w-16 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={newObjective}
-                  onChange={(e) => setNewObjective(parseInt(e.target.value) || 1)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="whitespace-nowrap">Type d'agent:</label>
-                <select
-                  value={agentType}
-                  onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT" | "DIGI")}
-                  className="border border-gray-300 px-3 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="HOT">HOT (3 RDV/h)</option>
-                  <option value="PROSPECT">PROSPECT (2 RDV/h)</option>
-                  <option value="DIGI">DIGI (5 RDV/h)</option>
-                </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="whitespace-nowrap">Type d'agent:</label>
+                  <select
+                    value={agentType}
+                    onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT" | "DIGI")}
+                    className="border border-gray-300 px-3 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="HOT">HOT (3 RDV/h)</option>
+                    <option value="PROSPECT">PROSPECT (2 RDV/h)</option>
+                    <option value="DIGI">DIGI (5 RDV/h)</option>
+                  </select>
+                </div>
               </div>
             </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button 
+                onClick={addAgent}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+              >
+                ➕ Ajouter un agent
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={resetAgents}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+              >
+                🔄 Réinitialiser tous les compteurs
+              </Button>
+              <Button 
+                onClick={exportToExcel}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-file-earmark-excel" viewBox="0 0 16 16">
+                  <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
+                  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                </svg>
+                Exporter vers Excel
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button 
-              onClick={addAgent}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-            >
-              ➕ Ajouter un agent
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={resetAgents}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-            >
-              🔄 Réinitialiser tous les compteurs
-            </Button>
-            <Button 
-              onClick={exportToExcel}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-file-earmark-excel" viewBox="0 0 16 16">
-                <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
-                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
-              </svg>
-              Exporter vers Excel
-            </Button>
-          </div>
-        </div>
+        )}
 
         <TopAgents 
           title="🏅 Top 3 CRM" 
