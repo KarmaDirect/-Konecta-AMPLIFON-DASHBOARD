@@ -421,13 +421,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <TopAgents 
-              title="🏅 Top 3 CRM" 
-              agents={topCRMAgents}
-              type="currentCRM"
-            />
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-3/4 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
+              <TopAgents 
+                title="🏅 Top 3 CRM" 
+                agents={topCRMAgents}
+                type="currentCRM"
+              />
+            </div>
 
             <AppointmentSection
               title="📋 RDV CRM"
@@ -441,11 +443,13 @@ export default function Dashboard() {
               onUpdateHours={updateAgentHours}
             />
 
-            <TopAgents 
-              title="🏅 Top 3 Digitaux" 
-              agents={topDigitalAgents}
-              type="currentDigital"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-center">
+              <TopAgents 
+                title="🏅 Top 3 Digitaux" 
+                agents={topDigitalAgents}
+                type="currentDigital"
+              />
+            </div>
 
             <AppointmentSection
               title="💻 RDV Digitaux"
@@ -459,8 +463,10 @@ export default function Dashboard() {
               onUpdateHours={updateAgentHours}
             />
           </div>
-          <div className="lg:col-span-1 space-y-8">
-            <ActivityFeed />
+          <div className="lg:w-1/4">
+            <div className="sticky top-4">
+              <ActivityFeed />
+            </div>
           </div>
         </div>
 
