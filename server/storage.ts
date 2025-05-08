@@ -194,6 +194,69 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return createdLog;
   }
+
+  // Scripts de campagne
+  async getCampaignScripts(): Promise<CampaignScript[]> {
+    return await db
+      .select()
+      .from(campaignScripts)
+      .orderBy(campaignScripts.priority, campaignScripts.title);
+  }
+
+  async getCampaignScriptById(id: number): Promise<CampaignScript | undefined> {
+    const [script] = await db
+      .select()
+      .from(campaignScripts)
+      .where(eq(campaignScripts.id, id));
+    return script;
+  }
+
+  async getCampaignScriptsByCategory(category: string): Promise<CampaignScript[]> {
+    return await db
+      .select()
+      .from(campaignScripts)
+      .where(eq(campaignScripts.category, category))
+      .orderBy(campaignScripts.priority, campaignScripts.title);
+  }
+
+  async getCampaignScriptsByCampaignName(campaignName: string): Promise<CampaignScript[]> {
+    return await db
+      .select()
+      .from(campaignScripts)
+      .where(eq(campaignScripts.campaignName, campaignName))
+      .orderBy(campaignScripts.priority, campaignScripts.title);
+  }
+
+  async createCampaignScript(script: InsertCampaignScript): Promise<CampaignScript> {
+    const now = new Date();
+    const [createdScript] = await db
+      .insert(campaignScripts)
+      .values({
+        ...script,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    return createdScript;
+  }
+
+  async updateCampaignScript(id: number, script: Partial<InsertCampaignScript>): Promise<CampaignScript | undefined> {
+    const now = new Date();
+    const [updatedScript] = await db
+      .update(campaignScripts)
+      .set({
+        ...script,
+        updatedAt: now
+      })
+      .where(eq(campaignScripts.id, id))
+      .returning();
+    return updatedScript;
+  }
+
+  async deleteCampaignScript(id: number): Promise<boolean> {
+    await db.delete(campaignScripts).where(eq(campaignScripts.id, id));
+    return true;
+  }
 }
 
 // Utiliser le stockage en base de données

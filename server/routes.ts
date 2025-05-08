@@ -2,7 +2,12 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { z } from "zod";
-import { insertAgentSchema, insertAchievementSchema, insertActivityLogSchema } from "@shared/schema";
+import { 
+  insertAgentSchema, 
+  insertAchievementSchema, 
+  insertActivityLogSchema,
+  insertCampaignScriptSchema
+} from "@shared/schema";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -348,6 +353,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Erreur lors de la création de la réalisation:", error);
         res.status(500).json({ error: "Erreur lors de la création de la réalisation" });
       }
+    }
+  });
+
+  // API pour les scripts de campagne
+  app.get("/api/campaign-scripts", async (req: Request, res: Response) => {
+    try {
+      const scripts = await storage.getCampaignScripts();
+      res.json(scripts);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des scripts:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des scripts" });
+    }
+  });
+
+  app.get("/api/campaign-scripts/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const script = await storage.getCampaignScriptById(id);
+      if (!script) {
+        return res.status(404).json({ error: "Script non trouvé" });
+      }
+      
+      res.json(script);
+    } catch (error) {
+      console.error("Erreur lors de la récupération du script:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du script" });
+    }
+  });
+
+  app.get("/api/campaign-scripts/category/:category", async (req: Request, res: Response) => {
+    try {
+      const category = req.params.category;
+      const scripts = await storage.getCampaignScriptsByCategory(category);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des scripts par catégorie:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des scripts par catégorie" });
+    }
+  });
+
+  app.get("/api/campaign-scripts/campaign/:campaignName", async (req: Request, res: Response) => {
+    try {
+      const campaignName = req.params.campaignName;
+      const scripts = await storage.getCampaignScriptsByCampaignName(campaignName);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des scripts par campagne:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des scripts par campagne" });
+    }
+  });
+
+  app.post("/api/campaign-scripts", async (req: any, res: Response) => {
+    try {
+      const validatedData = insertCampaignScriptSchema.parse(req.body);
+      const script = await storage.createCampaignScript(validatedData);
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'campaign_script_created',
+        data: { script }
+      });
+      
+      res.status(201).json(script);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Erreur lors de la création du script:", error);
+        res.status(500).json({ error: "Erreur lors de la création du script" });
+      }
+    }
+  });
+
+  app.put("/api/campaign-scripts/:id", async (req: any, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      // Validation partielle des données
+      const validatedData = insertCampaignScriptSchema.partial().parse(req.body);
+      
+      const script = await storage.updateCampaignScript(id, validatedData);
+      if (!script) {
+        return res.status(404).json({ error: "Script non trouvé" });
+      }
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'campaign_script_updated',
+        data: { script }
+      });
+      
+      res.json(script);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Erreur lors de la mise à jour du script:", error);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du script" });
+      }
+    }
+  });
+
+  app.delete("/api/campaign-scripts/:id", async (req: any, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const script = await storage.getCampaignScriptById(id);
+      if (!script) {
+        return res.status(404).json({ error: "Script non trouvé" });
+      }
+      
+      await storage.deleteCampaignScript(id);
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'campaign_script_deleted',
+        data: { scriptId: id }
+      });
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Erreur lors de la suppression du script:", error);
+      res.status(500).json({ error: "Erreur lors de la suppression du script" });
     }
   });
 
