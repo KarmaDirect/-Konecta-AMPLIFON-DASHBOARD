@@ -398,8 +398,11 @@ export default function ScriptsPage() {
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field}
+                          value={field.value?.toString() || "0"}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          name={field.name}
                           placeholder="0" 
                         />
                       </FormControl>
@@ -424,7 +427,7 @@ export default function ScriptsPage() {
                       </div>
                       <FormControl>
                         <Switch
-                          checked={field.value}
+                          checked={field.value || false}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>

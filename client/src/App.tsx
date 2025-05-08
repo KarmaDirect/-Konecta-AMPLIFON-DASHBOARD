@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
+import ScriptsPage from "@/pages/ScriptsPage";
 import AuthPage from "@/pages/auth-page";
 
 // Composant pour connecter les WebSockets au démarrage
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/grand-ecran" component={GrandEcran} />
+      <ProtectedRoute path="/scripts" component={ScriptsPage} />
       <Route component={NotFound} />
     </Switch>
   );
