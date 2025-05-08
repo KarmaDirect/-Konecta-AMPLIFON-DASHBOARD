@@ -7,7 +7,7 @@ import { Agent, getTopAgents } from "@/lib/agent";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAdmin } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [notified, setNotified] = useState<string[]>([]);
   const [newAgent, setNewAgent] = useState("");

@@ -27,6 +27,7 @@ export function AppointmentSection({
   onUpdateCount,
   onUpdateHours,
 }: AppointmentSectionProps) {
+  const { isAdmin } = useAuth();
   const isCRM = type === "currentCRM";
   const filteredAgents = agents.filter(agent => agent[type] !== null);
   const rdvCompleted = getTotalRdvCompleted(agents, type);
@@ -38,28 +39,30 @@ export function AppointmentSection({
     <div className="space-y-6">
       <h2 className={`text-xl font-semibold ${isCRM ? 'text-blue-800' : 'text-purple-800'}`}>{title}</h2>
       
-      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-lg shadow-md">
-        <label htmlFor={`rdv-${type}`} className="font-medium whitespace-nowrap">
-          RDV totaux à dispatcher :
-        </label>
-        <input
-          id={`rdv-${type}`}
-          type="number"
-          value={rdvTotal}
-          onChange={(e) => setRdvTotal(Number(e.target.value))}
-          min="1"
-          className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-24"
-        />
-        <Button 
-          onClick={() => onDispatchRdv(type)}
-          className={`whitespace-nowrap ${isCRM ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}
-        >
-          🧮 Répartir entre les agents
-        </Button>
-        <p className="text-sm text-gray-600 italic">
-          Répartition équitable : chaque agent recevra environ le même nombre de RDV.
-        </p>
-      </div>
+      {isAdmin && (
+        <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-lg shadow-md">
+          <label htmlFor={`rdv-${type}`} className="font-medium whitespace-nowrap">
+            RDV totaux à dispatcher :
+          </label>
+          <input
+            id={`rdv-${type}`}
+            type="number"
+            value={rdvTotal}
+            onChange={(e) => setRdvTotal(Number(e.target.value))}
+            min="1"
+            className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-24"
+          />
+          <Button 
+            onClick={() => onDispatchRdv(type)}
+            className={`whitespace-nowrap ${isCRM ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+          >
+            🧮 Répartir entre les agents
+          </Button>
+          <p className="text-sm text-gray-600 italic">
+            Répartition équitable : chaque agent recevra environ le même nombre de RDV.
+          </p>
+        </div>
+      )}
 
       <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-inner">
         <div
