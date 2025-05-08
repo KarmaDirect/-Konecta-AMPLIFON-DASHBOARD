@@ -197,12 +197,12 @@ export default function AuthPage() {
         <div className="order-1 md:order-2 text-center md:text-left">
           <div className="mb-8 flex justify-center md:justify-start">
             <img 
-              src="/@assets/Konecta-Logo.png" 
+              src="/assets/Konecta-Logo.png" 
               alt="Konecta" 
               className="h-12 mr-4" 
             />
             <img 
-              src="/@assets/Amplifon-Logo.png" 
+              src="/assets/Amplifon-Logo.png" 
               alt="Amplifon" 
               className="h-10" 
             />

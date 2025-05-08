@@ -168,7 +168,7 @@ export default function GrandEcran() {
               </select>
             </p>
           </div>
-          <img src="/@assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
+          <img src="/assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-blue-800/50 rounded-xl p-4 shadow-lg">
