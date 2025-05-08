@@ -26,17 +26,13 @@ function NavigationBar() {
 
 function Router() {
   return (
-    <div>
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/grand-ecran">
-        <ProtectedRoute path="/" component={GrandEcran} />
-      </Route>
+    <Switch>
       <Route path="/scripts" component={ScriptsPage} />
-      <Route path="/" exact>
-        <ProtectedRoute path="/" component={Dashboard} />
-      </Route>
-      <Route path="/:rest*" component={NotFound} />
-    </div>
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/grand-ecran" component={() => <ProtectedRoute path="/grand-ecran" component={GrandEcran} />} />
+      <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 

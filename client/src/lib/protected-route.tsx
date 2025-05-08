@@ -1,19 +1,20 @@
 import { Loader2 } from "lucide-react";
-import { Route, Redirect } from "wouter";
+import { Redirect } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
+// Composant original (utilisé dans l'ancien routage)
 export function ProtectedRoute({
-  path,
+  path = "/",
   component: Component,
 }: {
-  path: string;
+  path?: string;
   component: () => React.JSX.Element;
 }) {
   const { currentUser } = useAuth();
 
-  return (
-    <Route path={path}>
-      {currentUser ? <Component /> : <Redirect to="/auth" />}
-    </Route>
-  );
+  if (!currentUser) {
+    return <Redirect to="/auth" />;
+  }
+
+  return <Component />;
 }
