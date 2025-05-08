@@ -26,20 +26,37 @@ function NavigationBar() {
   if (!currentUser) return null;
   
   return (
-    <div className="flex justify-between items-center p-3 bg-gray-800 text-white">
-      <div className="flex items-center space-x-4">
-        <a href="/" className="hover:underline">Dashboard</a>
-        <a href="/scripts" className="hover:underline">Scripts</a>
-      </div>
-      <div>
+    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-900 to-blue-900 text-white shadow-md sticky top-0 z-10">
+      <div className="flex items-center space-x-1">
+        <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-8 bg-white p-1 rounded mr-2" />
         <a 
-          href="/grand-ecran.html" 
-          className="bg-blue-600 px-3 py-2 rounded-md hover:bg-blue-700"
+          href="/" 
+          className="px-3 py-2 rounded-md hover:bg-blue-800 transition-colors"
+        >
+          Dashboard
+        </a>
+        <a 
+          href="/scripts" 
+          className="px-3 py-2 rounded-md hover:bg-blue-800 transition-colors"
+        >
+          Scripts
+        </a>
+      </div>
+      
+      <div className="font-bold text-xl hidden md:block">
+        Mission RDV Master
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <a 
+          href="/grand-ecran-new.html" 
+          className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Ouvrir Grand Écran 🖥️
+          <span className="hidden md:inline">Ouvrir </span>Grand Écran 🖥️
         </a>
+        <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-8 bg-white p-1 rounded ml-2 hidden sm:block" />
       </div>
     </div>
   );
