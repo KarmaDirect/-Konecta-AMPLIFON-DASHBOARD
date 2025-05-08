@@ -256,6 +256,41 @@ export default function GrandEcran() {
         </div>
       </header>
 
+      {/* Bannière défilante pour les encouragements et félicitations - PLACÉE PLUS HAUT */}
+      <div className="my-6 relative overflow-hidden bg-gradient-to-r from-blue-900 to-purple-900 py-6 rounded-lg shadow-xl border-2 border-yellow-400">
+        <div 
+          ref={messageBannerRef}
+          className="whitespace-nowrap" 
+          style={{ transform: `translateX(${scrollPosition}px)` }}
+        >
+          <div className="inline-flex space-x-24">
+            {/* Messages pour les TOP agents */}
+            {topCRMAgents.map((agent, index) => (
+              <span key={`top-crm-${index}`} className="text-2xl font-bold text-yellow-300">
+                {getCongratulationMessage(agent, "currentCRM")}
+              </span>
+            ))}
+            {topDigitalAgents.map((agent, index) => (
+              <span key={`top-digital-${index}`} className="text-2xl font-bold text-pink-300">
+                {getCongratulationMessage(agent, "currentDigital")}
+              </span>
+            ))}
+            
+            {/* Messages pour les agents moins performants */}
+            {bottomCRMAgents.map((agent, index) => (
+              <span key={`bottom-crm-${index}`} className="text-2xl font-bold text-blue-300">
+                {getEncouragementMessage(agent, "currentCRM")}
+              </span>
+            ))}
+            {bottomDigitalAgents.map((agent, index) => (
+              <span key={`bottom-digital-${index}`} className="text-2xl font-bold text-purple-300">
+                {getEncouragementMessage(agent, "currentDigital")}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
@@ -286,41 +321,6 @@ export default function GrandEcran() {
             ) : (
               <p className="text-gray-300 italic col-span-2">Aucun agent Digital à afficher.</p>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bannière défilante pour les encouragements et félicitations */}
-      <div className="mt-6 mb-8 relative overflow-hidden bg-gradient-to-r from-blue-900 to-purple-900 py-4 rounded-lg shadow-lg">
-        <div 
-          ref={messageBannerRef}
-          className="whitespace-nowrap" 
-          style={{ transform: `translateX(${scrollPosition}px)` }}
-        >
-          <div className="inline-flex space-x-20">
-            {/* Messages pour les TOP agents */}
-            {topCRMAgents.map((agent, index) => (
-              <span key={`top-crm-${index}`} className="text-xl font-bold text-yellow-300">
-                {getCongratulationMessage(agent, "currentCRM")}
-              </span>
-            ))}
-            {topDigitalAgents.map((agent, index) => (
-              <span key={`top-digital-${index}`} className="text-xl font-bold text-pink-300">
-                {getCongratulationMessage(agent, "currentDigital")}
-              </span>
-            ))}
-            
-            {/* Messages pour les agents moins performants */}
-            {bottomCRMAgents.map((agent, index) => (
-              <span key={`bottom-crm-${index}`} className="text-xl font-bold text-blue-300">
-                {getEncouragementMessage(agent, "currentCRM")}
-              </span>
-            ))}
-            {bottomDigitalAgents.map((agent, index) => (
-              <span key={`bottom-digital-${index}`} className="text-xl font-bold text-purple-300">
-                {getEncouragementMessage(agent, "currentDigital")}
-              </span>
-            ))}
           </div>
         </div>
       </div>

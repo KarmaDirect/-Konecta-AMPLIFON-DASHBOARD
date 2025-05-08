@@ -14,7 +14,7 @@ export default function Dashboard() {
   const [newObjective, setNewObjective] = useState(20);
   const [rdvCRMTotal, setRdvCRMTotal] = useState(100);
   const [rdvDigitalTotal, setRdvDigitalTotal] = useState(50);
-  const [agentType, setAgentType] = useState<"HOT" | "PROSPECT">("HOT");
+  const [agentType, setAgentType] = useState<"HOT" | "PROSPECT" | "DIGI">("HOT");
 
   // Load agents from localStorage on component mount
   useEffect(() => {
