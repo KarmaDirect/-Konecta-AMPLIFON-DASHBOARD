@@ -6,7 +6,8 @@ import {
   insertAgentSchema, 
   insertAchievementSchema, 
   insertActivityLogSchema,
-  insertCampaignScriptSchema
+  insertCampaignScriptSchema,
+  insertAlertThresholdSchema
 } from "@shared/schema";
 import { storage } from "./storage";
 
@@ -550,6 +551,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur lors de la suppression du script:", error);
       res.status(500).json({ error: "Erreur lors de la suppression du script" });
+    }
+  });
+
+  // Routes pour les alertes et notifications
+  app.get("/api/alert-thresholds", async (req: Request, res: Response) => {
+    try {
+      const thresholds = await storage.getAlertThresholds();
+      res.json(thresholds);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des seuils d'alerte:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des seuils d'alerte" });
+    }
+  });
+
+  app.get("/api/alert-thresholds/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "ID utilisateur invalide" });
+      }
+      
+      const thresholds = await storage.getAlertThresholdsByUserId(userId);
+      res.json(thresholds);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des seuils d'alerte par utilisateur:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des seuils d'alerte par utilisateur" });
+    }
+  });
+
+  app.get("/api/alert-thresholds/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const threshold = await storage.getAlertThresholdById(id);
+      if (!threshold) {
+        return res.status(404).json({ error: "Seuil d'alerte non trouvé" });
+      }
+      
+      res.json(threshold);
+    } catch (error) {
+      console.error("Erreur lors de la récupération du seuil d'alerte:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du seuil d'alerte" });
+    }
+  });
+
+  app.post("/api/alert-thresholds", async (req: any, res: Response) => {
+    try {
+      const validatedData = insertAlertThresholdSchema.parse(req.body);
+      const threshold = await storage.createAlertThreshold(validatedData);
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'alert_threshold_created',
+        data: { threshold }
+      });
+      
+      res.status(201).json(threshold);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Erreur lors de la création du seuil d'alerte:", error);
+        res.status(500).json({ error: "Erreur lors de la création du seuil d'alerte" });
+      }
+    }
+  });
+
+  app.put("/api/alert-thresholds/:id", async (req: any, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      // Validation partielle des données
+      const validatedData = insertAlertThresholdSchema.partial().parse(req.body);
+      
+      const threshold = await storage.updateAlertThreshold(id, validatedData);
+      if (!threshold) {
+        return res.status(404).json({ error: "Seuil d'alerte non trouvé" });
+      }
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'alert_threshold_updated',
+        data: { threshold }
+      });
+      
+      res.json(threshold);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else {
+        console.error("Erreur lors de la mise à jour du seuil d'alerte:", error);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du seuil d'alerte" });
+      }
+    }
+  });
+
+  app.delete("/api/alert-thresholds/:id", async (req: any, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID invalide" });
+      }
+      
+      const threshold = await storage.getAlertThresholdById(id);
+      if (!threshold) {
+        return res.status(404).json({ error: "Seuil d'alerte non trouvé" });
+      }
+      
+      await storage.deleteAlertThreshold(id);
+      
+      // Notification en temps réel
+      req.broadcast({
+        type: 'alert_threshold_deleted',
+        data: { thresholdId: id }
+      });
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Erreur lors de la suppression du seuil d'alerte:", error);
+      res.status(500).json({ error: "Erreur lors de la suppression du seuil d'alerte" });
+    }
+  });
+
+  // Route pour vérifier les alertes d'un agent
+  app.get("/api/agents/:id/check-alerts/:type", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID agent invalide" });
+      }
+
+      const type = req.params.type;
+      if (type !== "CRM" && type !== "Digital") {
+        return res.status(400).json({ error: "Type d'alerte invalide. Doit être 'CRM' ou 'Digital'" });
+      }
+      
+      const alerts = await storage.checkAlerts(id, type);
+      res.json(alerts);
+    } catch (error) {
+      console.error("Erreur lors de la vérification des alertes:", error);
+      res.status(500).json({ error: "Erreur lors de la vérification des alertes" });
     }
   });
 

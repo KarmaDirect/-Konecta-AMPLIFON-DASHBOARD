@@ -278,6 +278,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {currentUser ? (
               <div className="flex items-center gap-4">
+                {currentUser && <AlertNotifications agentId={currentUser.id} />}
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-semibold text-gray-700">
                     {currentUser.name}
