@@ -141,18 +141,36 @@ export default function Dashboard() {
     const rdvPerAgent = Math.floor(rdvTotal / agentCount);
     const remainder = rdvTotal % agentCount;
 
-    const updated = agents.map((a, i) => {
+    const updated = agents.map((a) => {
       if (a[type] === null) return a;
       
       // Find the index of this agent in the filtered list
       const filteredIndex = filteredAgents.findIndex(fa => fa === a);
       const bonus = filteredIndex < remainder ? 1 : 0;
-      const objectif = rdvPerAgent + bonus;
+      const newObjectif = rdvPerAgent + bonus;
+      
+      // Calcul du nombre de RDV déjà pris par cet agent
+      const currentRdvValue = a[type] as number;
+      const originalObjectif = a.objectif;
+      
+      // Si l'agent a déjà des RDV pris (compteur < objectif initial ou négatif)
+      let rdvPris = 0;
+      if (currentRdvValue < 0) {
+        // RDV bonus : tous les RDV pris plus les RDV bonus
+        rdvPris = originalObjectif + Math.abs(currentRdvValue);
+      } else if (currentRdvValue < originalObjectif) {
+        // RDV normaux : différence entre l'objectif et le compteur actuel
+        rdvPris = originalObjectif - currentRdvValue;
+      }
+      
+      // Le nouveau compteur est le nouvel objectif moins les RDV déjà pris
+      // Si l'agent a pris plus que son nouvel objectif, il aura un compteur négatif (bonus)
+      const newCounterValue = Math.max(newObjectif - rdvPris, -Math.abs(rdvPris - newObjectif));
       
       return {
         ...a,
-        objectif,
-        [type]: objectif
+        objectif: newObjectif,
+        [type]: newCounterValue
       };
     });
 
@@ -162,7 +180,7 @@ export default function Dashboard() {
     const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
     wsClient.sendActivity(
       `a réparti ${rdvTotal} rendez-vous ${typeLabel}`,
-      `entre ${agentCount} agents`,
+      `entre ${agentCount} agents en préservant les RDV pris`,
       { 
         type: typeLabel,
         rdvTotal,
