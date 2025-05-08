@@ -4,7 +4,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { TeamPresenceProvider } from "@/hooks/use-team-presence";
 import { useRealtimeAgents } from "@/hooks/use-realtime-agents";
+import { TeamPresenceIndicator } from "@/components/TeamPresenceIndicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -16,6 +18,15 @@ import AuthPage from "@/pages/auth-page";
 function WebSocketConnector() {
   useRealtimeAgents();
   return null;
+}
+
+// Composant de barre de navigation pour afficher l'indicateur de présence de l'équipe
+function NavigationBar() {
+  return (
+    <div className="fixed top-0 right-0 p-4 z-50 flex gap-2">
+      <TeamPresenceIndicator />
+    </div>
+  );
 }
 
 function Router() {
@@ -34,11 +45,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <WebSocketConnector />
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <TeamPresenceProvider>
+          <TooltipProvider>
+            <WebSocketConnector />
+            <NavigationBar />
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </TeamPresenceProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

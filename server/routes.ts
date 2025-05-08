@@ -35,6 +35,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
   
+  // Objets pour suivre la présence des utilisateurs et les activités
+  const onlineUsers = new Map<number, any>();
+  const recentActivities: any[] = [];
+  const maxActivities = 100; // Nombre maximum d'activités à stocker
+
   // Événements WebSocket
   wss.on('connection', (ws: WebSocket) => {
     console.log('Nouvelle connexion WebSocket établie');
@@ -49,14 +54,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       }
     });
-    
-    // Gestionnaire de messages
+
+  // Gestionnaire de messages
     ws.on('message', async (message: string) => {
       try {
         const parsedMessage = JSON.parse(message.toString());
         
         // Traitement des différents types de messages
-        if (parsedMessage.type === 'update_agent') {
+        if (parsedMessage.type === 'presence') {
+          // Mise à jour de la présence d'un utilisateur
+          const userData = parsedMessage.data;
+          onlineUsers.set(userData.userId, {
+            ...userData,
+            lastSeen: new Date()
+          });
+          
+          // Diffuser la mise à jour de présence à tous les clients
+          broadcastMessage({
+            type: 'presence',
+            data: userData
+          });
+          
+          // Envoyer un résumé des utilisateurs en ligne au nouveau client
+          ws.send(JSON.stringify({
+            type: 'presence_summary',
+            data: { users: Array.from(onlineUsers.values()) }
+          }));
+          
+          // Envoyer l'historique des activités récentes
+          ws.send(JSON.stringify({
+            type: 'activity_history',
+            data: { activities: recentActivities }
+          }));
+        } 
+        else if (parsedMessage.type === 'user_offline') {
+          // Utilisateur déconnecté
+          const { userId } = parsedMessage.data;
+          onlineUsers.delete(userId);
+          
+          // Informer tous les clients
+          broadcastMessage({
+            type: 'user_offline',
+            data: { userId }
+          });
+        }
+        else if (parsedMessage.type === 'activity') {
+          // Nouvelle activité
+          const activity = {
+            ...parsedMessage.data,
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          };
+          
+          // Ajouter au début de la liste et limiter la taille
+          recentActivities.unshift(activity);
+          if (recentActivities.length > maxActivities) {
+            recentActivities.pop();
+          }
+          
+          // Diffuser l'activité à tous les clients
+          broadcastMessage({
+            type: 'activity',
+            data: activity
+          });
+        }
+        else if (parsedMessage.type === 'update_agent') {
           const { agentId, updates } = parsedMessage.data;
           
           // Validation et mise à jour dans la base de données

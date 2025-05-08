@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import * as XLSX from "xlsx";
 import { TopAgents } from "@/components/TopAgents";
 import { AppointmentSection } from "@/components/AppointmentSection";
+import { ActivityFeed } from "@/components/ActivityFeed";
 import { Agent, getTopAgents } from "@/lib/agent";
 import { useAuth } from "@/hooks/use-auth";
+import { useTeamPresence } from "@/hooks/use-team-presence";
+import { wsClient } from "@/lib/websocket";
 
 export default function Dashboard() {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -127,6 +130,15 @@ export default function Dashboard() {
     updated[index][type] = previous + delta;
     setAgents(updated);
 
+    // Envoyer une notification d'activité
+    const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
+    const action = delta > 0 ? "a ajouté" : "a retiré";
+    wsClient.sendActivity(
+      `${action} un rendez-vous ${typeLabel}`,
+      updated[index].name,
+      { agent: updated[index].name, delta, type: typeLabel }
+    );
+
     if (
       previous >= 0 &&
       updated[index][type]! < 0 &&
@@ -138,6 +150,13 @@ export default function Dashboard() {
         } ! ⭐`
       );
       setNotified([...notified, `${updated[index].name}-${type}`]);
+      
+      // Envoyer une notification de réussite
+      wsClient.sendActivity(
+        "a atteint son objectif",
+        `${updated[index].name} (${typeLabel})`,
+        { agent: updated[index].name, type: typeLabel }
+      );
     }
   };
 
@@ -330,6 +349,8 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        <ActivityFeed />
 
         <TopAgents 
           title="🏅 Top 3 CRM" 
