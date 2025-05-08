@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
 import type { CampaignScript, InsertCampaignScript } from '@shared/schema';
 
 // Hook pour récupérer tous les scripts
@@ -7,6 +7,7 @@ export const useCampaignScripts = () => {
   return useQuery<CampaignScript[]>({
     queryKey: ['/api/campaign-scripts'],
     staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: getQueryFn({ on401: "returnNull" }), // Override du comportement par défaut pour permettre l'accès même sans authentification
   });
 };
 
