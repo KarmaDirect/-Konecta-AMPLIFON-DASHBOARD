@@ -216,16 +216,8 @@ export default function Dashboard() {
       // Calculer le nombre de RDV bonus
       const bonusRdv = Math.abs(updated[index][type]!);
       
-      // Afficher une notification spéciale pour les RDV bonus
-      if (delta < 0 && !notified.includes(`${updated[index].name}-${type}-bonus-${bonusRdv}`)) {
-        alert(
-          `⭐⭐ Super ${updated[index].name} ! Tu viens d'ajouter un RDV bonus en ${
-            type === "currentCRM" ? "CRM" : "Digital"
-          } ! Tu as maintenant ${bonusRdv} RDV bonus ! 🚀`
-        );
-        setNotified([...notified, `${updated[index].name}-${type}-bonus-${bonusRdv}`]);
-        
-        // Envoyer une notification d'activité pour le bonus
+      // Envoyer une notification d'activité pour le bonus (sans alerte)
+      if (delta < 0) {
         wsClient.sendActivity(
           "a pris un RDV bonus",
           `${updated[index].name} (${typeLabel})`,
