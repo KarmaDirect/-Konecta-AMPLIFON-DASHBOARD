@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="description" content="Grand Écran - Suivi des agents Konecta et Amplifon pour la gestion des rendez-vous CRM et Digitaux" />
+    <title>Grand Écran | Mission RDV Master</title>
+    <!-- Open Graph tags -->
+    <meta property="og:title" content="Grand Écran | Mission RDV Master" />
+    <meta property="og:description" content="Affichage grand écran pour le suivi et la gestion des rendez-vous CRM et Digitaux" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="/src/index.css">
+  </head>
+  <body>
+    <div id="grand-ecran-root"></div>
+    <script type="module">
+      import { createRoot } from "react-dom/client";
+      import GrandEcran from "./src/pages/GrandEcran";
+      import "./src/index.css";
+      import { AuthProvider } from "./src/hooks/use-auth";
+      import { QueryClientProvider } from "@tanstack/react-query";
+      import { queryClient } from "./src/lib/queryClient";
+      import { TeamPresenceProvider } from "./src/hooks/use-team-presence";
+      import { TooltipProvider } from "./src/components/ui/tooltip";
+      import { Toaster } from "./src/components/ui/toaster";
+
+      createRoot(document.getElementById("grand-ecran-root")).render(
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <TeamPresenceProvider>
+              <TooltipProvider>
+                <Toaster />
+                <GrandEcran />
+              </TooltipProvider>
+            </TeamPresenceProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      );
+    </script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

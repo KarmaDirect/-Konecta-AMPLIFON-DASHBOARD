@@ -21,26 +21,35 @@ function WebSocketConnector() {
 
 // Composant de barre de navigation (vide pour le moment)
 function NavigationBar() {
-  return null;
-}
-
-// Route directe pour Grand Écran
-const GrandEcranRoute = () => {
   const { currentUser } = useAuth();
   
-  if (!currentUser) {
-    return <Redirect to="/auth" />;
-  }
+  if (!currentUser) return null;
   
-  return <GrandEcran />;
-};
+  return (
+    <div className="flex justify-between items-center p-3 bg-gray-800 text-white">
+      <div className="flex items-center space-x-4">
+        <a href="/" className="hover:underline">Dashboard</a>
+        <a href="/scripts" className="hover:underline">Scripts</a>
+      </div>
+      <div>
+        <a 
+          href="/grand-ecran.html" 
+          className="bg-blue-600 px-3 py-2 rounded-md hover:bg-blue-700"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ouvrir Grand Écran 🖥️
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function Router() {
   return (
     <Switch>
       <Route path="/scripts" component={ScriptsPage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/grand-ecran" component={GrandEcranRoute} />
       <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
