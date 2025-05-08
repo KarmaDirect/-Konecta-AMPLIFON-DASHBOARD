@@ -28,9 +28,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/grand-ecran" component={GrandEcran} />
       <Route path="/scripts" component={ScriptsPage} />
+      <ProtectedRoute path="/" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );
