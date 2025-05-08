@@ -18,7 +18,7 @@ export const getAgentCompletionRatio = (agent: Agent, type: "currentCRM" | "curr
   return Math.min(1, Math.max(0, 1 - agent[type]! / agent.objectif));
 };
 
-export const getTopAgents = (agents: Agent[], type: "currentCRM" | "currentDigital", limit = 3): Agent[] => {
+export const getTopAgents = (agents: Agent[], type: "currentCRM" | "currentDigital", limit = 5): Agent[] => {
   return [...agents]
     .filter(a => a[type] !== null)
     .sort((a, b) => {

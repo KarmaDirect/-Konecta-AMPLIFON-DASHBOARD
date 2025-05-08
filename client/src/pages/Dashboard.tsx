@@ -428,7 +428,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <TopAgents 
-              title="🏅 Top 3 CRM" 
+              title="🏅 Top 5 CRM" 
               agents={topCRMAgents}
               type="currentCRM"
             />
@@ -446,7 +446,7 @@ export default function Dashboard() {
             />
 
             <TopAgents 
-              title="🏅 Top 3 Digitaux" 
+              title="🏅 Top 5 Digitaux" 
               agents={topDigitalAgents}
               type="currentDigital"
             />
