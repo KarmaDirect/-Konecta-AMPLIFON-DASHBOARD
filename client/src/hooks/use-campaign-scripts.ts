@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { CampaignScript, InsertCampaignScript } from '@shared/schema';
 
 // Hook pour récupérer tous les scripts
@@ -7,7 +7,24 @@ export const useCampaignScripts = () => {
   return useQuery<CampaignScript[]>({
     queryKey: ['/api/campaign-scripts'],
     staleTime: 1000 * 60 * 5, // 5 minutes
-    queryFn: getQueryFn({ on401: "returnNull" }), // Override du comportement par défaut pour permettre l'accès même sans authentification
+    // Implémentation personnalisée de la fonction de requête pour gérer les erreurs 401
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(queryKey[0] as string, { credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 401) {
+            // On retourne un tableau vide si l'utilisateur n'est pas authentifié
+            return [] as CampaignScript[];
+          }
+          const text = await res.text();
+          throw new Error(`${res.status}: ${text || res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("Erreur lors de la récupération des scripts:", error);
+        return [] as CampaignScript[];
+      }
+    }
   });
 };
 
@@ -16,6 +33,23 @@ export const useCampaignScriptById = (id: number) => {
   return useQuery<CampaignScript>({
     queryKey: ['/api/campaign-scripts', id],
     enabled: !!id,
+    // Implémentation personnalisée pour gérer les erreurs 401
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(`${queryKey[0]}/${queryKey[1]}`, { credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 401) {
+            return null as any as CampaignScript;
+          }
+          const text = await res.text();
+          throw new Error(`${res.status}: ${text || res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error(`Erreur lors de la récupération du script ${id}:`, error);
+        return null as any as CampaignScript;
+      }
+    }
   });
 };
 
@@ -24,6 +58,23 @@ export const useCampaignScriptsByCategory = (category: string) => {
   return useQuery<CampaignScript[]>({
     queryKey: ['/api/campaign-scripts/category', category],
     enabled: !!category,
+    // Implémentation personnalisée pour gérer les erreurs 401
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(`${queryKey[0]}/${queryKey[1]}`, { credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 401) {
+            return [] as CampaignScript[];
+          }
+          const text = await res.text();
+          throw new Error(`${res.status}: ${text || res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error(`Erreur lors de la récupération des scripts par catégorie ${category}:`, error);
+        return [] as CampaignScript[];
+      }
+    }
   });
 };
 
@@ -32,6 +83,23 @@ export const useCampaignScriptsByCampaignName = (campaignName: string) => {
   return useQuery<CampaignScript[]>({
     queryKey: ['/api/campaign-scripts/campaign', campaignName],
     enabled: !!campaignName,
+    // Implémentation personnalisée pour gérer les erreurs 401
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(`${queryKey[0]}/${queryKey[1]}`, { credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 401) {
+            return [] as CampaignScript[];
+          }
+          const text = await res.text();
+          throw new Error(`${res.status}: ${text || res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        console.error(`Erreur lors de la récupération des scripts par campagne ${campaignName}:`, error);
+        return [] as CampaignScript[];
+      }
+    }
   });
 };
 
