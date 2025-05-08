@@ -43,16 +43,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
-      // Simulation de connexion pour la démo
-      // Dans une vraie application, ce serait une requête API
-      const mockUser: User = {
-        id: 1,
-        name: username,
-        objectif: 10,
-        currentCRM: 0,
-        currentDigital: 0,
-        role: username.toLowerCase().includes("admin") ? "ADMIN" : "AGENT",
-      };
+      // Vérifier si un utilisateur avec ce nom d'utilisateur existe déjà dans localStorage
+      // pour maintenir la cohérence avec l'inscription
+      const existingUsers = localStorage.getItem("registeredUsers");
+      let users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      // Rechercher l'utilisateur par nom d'utilisateur
+      const foundUser = users.find((user: any) => user.username === username);
+      
+      let mockUser: User;
+      
+      if (foundUser) {
+        // Utiliser le rôle enregistré lors de l'inscription
+        mockUser = {
+          id: 1,
+          name: foundUser.name || username,
+          objectif: 10,
+          currentCRM: 0,
+          currentDigital: 0,
+          role: foundUser.role || "AGENT",
+        };
+      } else {
+        // Nouvel utilisateur, détermine le rôle en fonction du nom d'utilisateur
+        // par défaut, maintient la compatibilité avec l'existant
+        mockUser = {
+          id: 1,
+          name: username,
+          objectif: 10,
+          currentCRM: 0,
+          currentDigital: 0,
+          role: username.toLowerCase().includes("admin") ? "ADMIN" : "AGENT",
+        };
+        
+        // Enregistrer ce nouvel utilisateur pour les futures connexions
+        users.push({username, name: username, role: mockUser.role});
+        localStorage.setItem("registeredUsers", JSON.stringify(users));
+      }
 
       // Sauvegarde dans localStorage
       localStorage.setItem("currentUser", JSON.stringify(mockUser));
@@ -85,8 +111,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentDigital: 0,
         role: userData.role,
       };
+      
+      // Enregistrement de l'utilisateur dans la liste des utilisateurs enregistrés
+      const existingUsers = localStorage.getItem("registeredUsers");
+      let users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      // Vérifier si l'utilisateur existe déjà
+      const existingIndex = users.findIndex((user: any) => user.username === userData.username);
+      
+      if (existingIndex >= 0) {
+        // Mise à jour de l'utilisateur existant
+        users[existingIndex] = {
+          username: userData.username,
+          name: userData.name,
+          role: userData.role
+        };
+      } else {
+        // Ajout du nouvel utilisateur
+        users.push({
+          username: userData.username,
+          name: userData.name,
+          role: userData.role
+        });
+      }
+      
+      localStorage.setItem("registeredUsers", JSON.stringify(users));
 
-      // Sauvegarde dans localStorage
+      // Sauvegarde dans localStorage pour la session courante
       localStorage.setItem("currentUser", JSON.stringify(mockUser));
       setCurrentUser(mockUser);
 
