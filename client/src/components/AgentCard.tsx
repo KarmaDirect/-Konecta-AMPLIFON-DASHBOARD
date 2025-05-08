@@ -71,11 +71,17 @@ export function AgentCard({
   
   // Handler pour demander de l'aide
   const handleToggleHelp = () => {
-    if (agent.id) {
+    // Vérifier que l'agent a un ID valide (positif)
+    if (agent.id && agent.id > 0) {
       toggleHelpRequest.mutate({ 
         id: agent.id, 
         needsHelp: !(agent.needsHelp || false) 
       });
+    } else {
+      // Pour les agents locaux temporaires (sans ID valide), modifier directement la propriété
+      agent.needsHelp = !(agent.needsHelp || false);
+      // Forcer la mise à jour de l'interface
+      onUpdateHours(index, agent.hours || 1);
     }
   };
 
