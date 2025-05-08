@@ -41,12 +41,14 @@ export default function Dashboard() {
       }
 
       const newEntry: Agent = {
+        id: -1, // ID temporaire, sera remplacé par le vrai ID attribué par le serveur
         name: newAgent.trim(),
         objectif: Number(newObjective),
         currentCRM: isCRM ? Number(newObjective) : null,
         currentDigital: isDigital ? Number(newObjective) : null,
         hours: 1,
-        type: agentType
+        type: agentType,
+        needsHelp: false
       };
       setAgents([...agents, newEntry]);
       setNewAgent("");

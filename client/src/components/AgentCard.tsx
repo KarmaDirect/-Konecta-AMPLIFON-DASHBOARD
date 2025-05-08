@@ -11,9 +11,8 @@ import { Button } from "@/components/ui/button";
 import { getEmoji, getAgentRdvPerHour } from "@/lib/agent";
 import { Agent } from "@/lib/types";
 import { BadgeCheck, Trash2, Plus, Minus, AlertTriangle, HelpCircle } from "lucide-react";
-// Pour les tests en attendant que le hook soit fonctionnel
-// import { useToggleHelpRequest } from "@/hooks/use-activity"; 
-// import { useAuth } from "@/hooks/use-auth";
+import { useToggleHelpRequest } from "@/hooks/use-activity"; 
+import { useAuth } from "@/hooks/use-auth";
 
 interface AgentCardProps {
   agent: Agent;
@@ -38,11 +37,9 @@ export function AgentCard({
 }: AgentCardProps) {
   const [displayHours, setDisplayHours] = useState(agent.hours || 1);
   
-  // Pour gérer les demandes d'aide - temporairement mockés
-  const toggleHelpRequest = {
-    mutate: (data: any) => console.log('Demande aide:', data) 
-  };
-  const isAdmin = true; // Temporairement, on considère que l'utilisateur est admin
+  // Pour gérer les demandes d'aide
+  const toggleHelpRequest = useToggleHelpRequest();
+  const { isAdmin } = useAuth();
   
   // Calculer le taux de RDV par heure
   const rdvPerHour = getAgentRdvPerHour(agent);

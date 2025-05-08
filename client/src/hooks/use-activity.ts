@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Agent, ActivityLog } from '@/lib/types';
+import type { Agent, ActivityLog } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
 
 // Hook pour récupérer tous les logs d'activité
