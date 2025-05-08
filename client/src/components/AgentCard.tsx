@@ -119,7 +119,7 @@ export function AgentCard({
               size="sm" 
               variant="outline" 
               onClick={() => onUpdateCount(index, -1, type)}
-              disabled={!currentCount}
+              disabled={currentCount === null}
             >
               <Minus className="h-4 w-4" />
             </Button>
