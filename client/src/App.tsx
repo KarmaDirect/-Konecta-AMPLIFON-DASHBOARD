@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
+import GrandEcranNew from "@/pages/GrandEcranNew";
 import ScriptsPage from "@/pages/ScriptsPage";
 import AuthPage from "@/pages/auth-page";
 
@@ -49,10 +50,8 @@ function NavigationBar() {
       
       <div className="flex items-center space-x-2">
         <a 
-          href="/grand-ecran-new.html" 
+          href="/grand-ecran" 
           className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
-          target="_blank"
-          rel="noopener noreferrer"
         >
           <span className="hidden md:inline">Ouvrir </span>Grand Écran 🖥️
         </a>
@@ -67,6 +66,7 @@ function Router() {
     <Switch>
       <Route path="/scripts" component={ScriptsPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/grand-ecran" component={GrandEcranNew} />
       <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
