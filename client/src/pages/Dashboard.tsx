@@ -66,14 +66,38 @@ export default function Dashboard() {
       setNewObjective(20);
       setIsCRM(true);
       setIsDigital(true);
+      
+      // Envoyer une notification d'activité pour l'ajout d'agent
+      wsClient.sendActivity(
+        "a ajouté un nouvel agent",
+        newEntry.name,
+        { 
+          agent: newEntry.name, 
+          type: agentType,
+          hasCRM: isCRM,
+          hasDigital: isDigital,
+          objectif: Number(newObjective)
+        }
+      );
     }
   };
 
   const removeAgent = (index: number) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${agents[index].name} ?`)) {
+      const agent = agents[index];
       const updated = [...agents];
       updated.splice(index, 1);
       setAgents(updated);
+      
+      // Envoyer une notification d'activité pour la suppression d'agent
+      wsClient.sendActivity(
+        "a supprimé un agent",
+        agent.name,
+        { 
+          agent: agent.name,
+          type: agent.type
+        }
+      );
     }
   };
 
@@ -87,6 +111,16 @@ export default function Dashboard() {
         }))
       );
       setNotified([]);
+      
+      // Envoyer une notification d'activité pour la réinitialisation
+      wsClient.sendActivity(
+        "a réinitialisé tous les compteurs d'objectifs",
+        "",
+        { 
+          action: "reset_all",
+          agentCount: agents.length
+        }
+      );
     }
   };
 
@@ -119,6 +153,19 @@ export default function Dashboard() {
     });
 
     setAgents(updated);
+    
+    // Envoyer une notification d'activité pour la répartition des RDV
+    const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
+    wsClient.sendActivity(
+      `a réparti ${rdvTotal} rendez-vous ${typeLabel}`,
+      `entre ${agentCount} agents`,
+      { 
+        type: typeLabel,
+        rdvTotal,
+        agentCount,
+        rdvPerAgent
+      }
+    );
   };
 
   const updateCount = (index: number, delta: number, type: "currentCRM" | "currentDigital") => {
@@ -162,8 +209,20 @@ export default function Dashboard() {
 
   const updateAgentHours = (index: number, hours: number) => {
     const updated = [...agents];
+    const previousHours = updated[index].hours;
     updated[index].hours = hours;
     setAgents(updated);
+    
+    // Envoyer une notification d'activité pour la mise à jour des heures de travail
+    wsClient.sendActivity(
+      "a modifié les heures de travail",
+      updated[index].name,
+      { 
+        agent: updated[index].name,
+        previousHours,
+        newHours: hours
+      }
+    );
   };
 
   const exportToExcel = () => {
@@ -184,6 +243,18 @@ export default function Dashboard() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RDV Agents");
     XLSX.writeFile(wb, "Suivi_RDV_Agents_CRM_Digital.xlsx");
+    
+    // Envoyer une notification d'activité pour l'export Excel
+    wsClient.sendActivity(
+      "a exporté les données des agents vers Excel",
+      "",
+      { 
+        agentCount: agents.length,
+        crmAgents: crmAgents.length,
+        digitalAgents: digitalAgents.length,
+        timestamp: new Date().toISOString()
+      }
+    );
   };
 
   const crmAgents = agents.filter((a) => a.currentCRM !== null);
