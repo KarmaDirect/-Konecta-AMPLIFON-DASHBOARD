@@ -20,9 +20,9 @@ interface AgentCardProps {
   type: "currentCRM" | "currentDigital";
   onRemove: (index: number) => void;
   onUpdateCount: (index: number, delta: number, type: "currentCRM" | "currentDigital") => void;
-  onUpdateHours: (index: number, hours: number) => void;
+  onUpdateHours: (index: number, hours: number) => void; // Gardé pour la compatibilité
   rdvTotal: number;
-  totalAgentHours: number;
+  totalAgentHours: number; // Gardé pour la compatibilité
 }
 
 export function AgentCard({
@@ -35,8 +35,6 @@ export function AgentCard({
   rdvTotal,
   totalAgentHours,
 }: AgentCardProps) {
-  const [displayHours, setDisplayHours] = useState(agent.hours || 1);
-  
   // Pour gérer les demandes d'aide
   const toggleHelpRequest = useToggleHelpRequest();
   const { isAdmin } = useAuth();
@@ -55,13 +53,6 @@ export function AgentCard({
     ? Math.min(Math.round((currentCount / agent.objectif) * 100), 100) 
     : 0;
   
-  // Mettre à jour les heures si elles changent
-  useEffect(() => {
-    if (agent.hours && agent.hours !== displayHours) {
-      setDisplayHours(agent.hours);
-    }
-  }, [agent.hours]);
-  
   // Handler pour demander de l'aide
   const handleToggleHelp = () => {
     // Vérifier que l'agent a un ID valide (positif)
@@ -73,8 +64,8 @@ export function AgentCard({
     } else {
       // Pour les agents locaux temporaires (sans ID valide), modifier directement la propriété
       agent.needsHelp = !(agent.needsHelp || false);
-      // Forcer la mise à jour de l'interface
-      onUpdateHours(index, agent.hours || 1);
+      // Forcer une mise à jour pour les agents temporaires
+      onUpdateCount(index, 0, type);
     }
   };
 
@@ -105,7 +96,7 @@ export function AgentCard({
           ></div>
         </div>
         
-        <div className="flex justify-between items-center mt-3">
+        <div className="flex justify-center items-center mt-3">
           <div className="flex items-center space-x-2">
             <Button 
               size="sm" 
@@ -122,9 +113,6 @@ export function AgentCard({
             >
               <Plus className="h-4 w-4" />
             </Button>
-          </div>
-          <div className="flex items-center">
-            <span className="text-sm">Heures: {displayHours}</span>
           </div>
         </div>
       </CardContent>
