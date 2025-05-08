@@ -37,7 +37,7 @@ export function AgentCard({
   const isCRM = type === "currentCRM";
   const emoji = getEmoji(currentValue, agent.objectif);
   const completionRatio = getAgentCompletionRatio(agent, type);
-  const rdvPerHour = Math.round(rdvTotal / totalAgentHours);
+  const rdvPerHour = getAgentRdvPerHour(agent);
   
   let statusText = "";
   if (currentValue !== null) {
@@ -96,7 +96,7 @@ export function AgentCard({
           
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-600">RDV/heure :</p>
-            <p className="font-medium">{rdvPerHour}</p>
+            <p className="font-medium">{rdvPerHour} ({agent.type || "HOT"})</p>
           </div>
           
           <div className="mt-2">

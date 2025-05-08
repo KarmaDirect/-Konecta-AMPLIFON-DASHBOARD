@@ -1,10 +1,36 @@
-import { useState, useEffect } from "react";
-import { Agent, getEmoji, getAgentCompletionRatio, getTotalRdvCompleted } from "@/lib/agent";
+import { useState, useEffect, useRef } from "react";
+import { Agent, getEmoji, getAgentCompletionRatio, getTotalRdvCompleted, getTopAgents, getBottomAgents, getEncouragementMessage, getCongratulationMessage } from "@/lib/agent";
 
 export default function GrandEcran() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [refreshRate, setRefreshRate] = useState(30); // seconds
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const messageBannerRef = useRef<HTMLDivElement>(null);
+
+  // Animation pour le texte défilant
+  useEffect(() => {
+    const animate = () => {
+      if (messageBannerRef.current) {
+        const bannerWidth = messageBannerRef.current.scrollWidth;
+        const viewportWidth = messageBannerRef.current.offsetWidth;
+        
+        if (scrollPosition < -bannerWidth) {
+          setScrollPosition(viewportWidth);
+        } else {
+          setScrollPosition(prevPosition => prevPosition - 1);
+        }
+      }
+    };
+    
+    const animationFrame = requestAnimationFrame(animate);
+    const animationInterval = setInterval(animate, 30);
+    
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      clearInterval(animationInterval);
+    };
+  }, [scrollPosition]);
 
   // Load agents from localStorage on component mount and periodically
   useEffect(() => {
@@ -34,6 +60,12 @@ export default function GrandEcran() {
     
   const digitalAgents = agents.filter((a) => a.currentDigital !== null)
     .sort((a, b) => getAgentCompletionRatio(b, "currentDigital") - getAgentCompletionRatio(a, "currentDigital"));
+    
+  const topCRMAgents = getTopAgents(agents, "currentCRM", 3);
+  const topDigitalAgents = getTopAgents(agents, "currentDigital", 3);
+  
+  const bottomCRMAgents = getBottomAgents(agents, "currentCRM", 3);
+  const bottomDigitalAgents = getBottomAgents(agents, "currentDigital", 3);
 
   const totalCRM = crmAgents.reduce((sum, a) => sum + a.objectif, 0);
   const totalDigital = digitalAgents.reduce((sum, a) => sum + a.objectif, 0);
@@ -159,12 +191,24 @@ export default function GrandEcran() {
                 <p className="text-3xl font-bold">{totalBonusCRM} ⭐</p>
               </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-green-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
-                style={{ width: `${crmCompletionRate}%` }}
-              >
-                {crmCompletionRate}%
+            <div className="mb-3">
+              <div className="flex justify-between text-sm mb-1">
+                <span>Progression:</span>
+                <span>{totalCRMCompleted}/{totalCRM} ({crmCompletionRate}%)</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-green-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
+                  style={{ width: `${crmCompletionRate}%` }}
+                >
+                  {crmCompletionRate}%
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Restants:</span>
+                <span className="font-bold text-yellow-300">{totalCRM - totalCRMCompleted} RDV à faire</span>
               </div>
             </div>
           </div>
@@ -188,12 +232,24 @@ export default function GrandEcran() {
                 <p className="text-3xl font-bold">{totalBonusDigital} ⭐</p>
               </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
-              <div 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
-                style={{ width: `${digitalCompletionRate}%` }}
-              >
-                {digitalCompletionRate}%
+            <div className="mb-3">
+              <div className="flex justify-between text-sm mb-1">
+                <span>Progression:</span>
+                <span>{totalDigitalCompleted}/{totalDigital} ({digitalCompletionRate}%)</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
+                <div 
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
+                  style={{ width: `${digitalCompletionRate}%` }}
+                >
+                  {digitalCompletionRate}%
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Restants:</span>
+                <span className="font-bold text-yellow-300">{totalDigital - totalDigitalCompleted} RDV à faire</span>
               </div>
             </div>
           </div>
@@ -230,6 +286,41 @@ export default function GrandEcran() {
             ) : (
               <p className="text-gray-300 italic col-span-2">Aucun agent Digital à afficher.</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bannière défilante pour les encouragements et félicitations */}
+      <div className="mt-6 mb-8 relative overflow-hidden bg-gradient-to-r from-blue-900 to-purple-900 py-4 rounded-lg shadow-lg">
+        <div 
+          ref={messageBannerRef}
+          className="whitespace-nowrap" 
+          style={{ transform: `translateX(${scrollPosition}px)` }}
+        >
+          <div className="inline-flex space-x-20">
+            {/* Messages pour les TOP agents */}
+            {topCRMAgents.map((agent, index) => (
+              <span key={`top-crm-${index}`} className="text-xl font-bold text-yellow-300">
+                {getCongratulationMessage(agent, "currentCRM")}
+              </span>
+            ))}
+            {topDigitalAgents.map((agent, index) => (
+              <span key={`top-digital-${index}`} className="text-xl font-bold text-pink-300">
+                {getCongratulationMessage(agent, "currentDigital")}
+              </span>
+            ))}
+            
+            {/* Messages pour les agents moins performants */}
+            {bottomCRMAgents.map((agent, index) => (
+              <span key={`bottom-crm-${index}`} className="text-xl font-bold text-blue-300">
+                {getEncouragementMessage(agent, "currentCRM")}
+              </span>
+            ))}
+            {bottomDigitalAgents.map((agent, index) => (
+              <span key={`bottom-digital-${index}`} className="text-xl font-bold text-purple-300">
+                {getEncouragementMessage(agent, "currentDigital")}
+              </span>
+            ))}
           </div>
         </div>
       </div>
