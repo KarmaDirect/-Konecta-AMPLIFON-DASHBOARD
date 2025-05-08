@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { TeamPresenceProvider } from "@/hooks/use-team-presence";
 import { useRealtimeAgents } from "@/hooks/use-realtime-agents";
-import { TeamPresenceIndicator } from "@/components/TeamPresenceIndicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -20,13 +19,9 @@ function WebSocketConnector() {
   return null;
 }
 
-// Composant de barre de navigation pour afficher l'indicateur de présence de l'équipe
+// Composant de barre de navigation (vide pour le moment)
 function NavigationBar() {
-  return (
-    <div className="fixed top-0 right-0 p-4 z-50 flex gap-2">
-      <TeamPresenceIndicator />
-    </div>
-  );
+  return null;
 }
 
 function Router() {
