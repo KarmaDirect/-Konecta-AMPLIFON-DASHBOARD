@@ -1,0 +1,176 @@
+**Cahier des Charges Ultra Détaillé – Dashboard Agents RDV (Konecta)**
+
+---
+
+### 🎯 Objectif Général
+
+Créer une interface web ludique, collaborative et visuellement engageante pour permettre à un superviseur (comme Hatim) de suivre, distribuer et ajuster les objectifs de rendez-vous (RDV) de ses agents CRM et Digitaux.
+
+### 🧱 Stack Technique
+
+* **React.js** via **Vite** pour le frontend.
+* **Tailwind CSS** pour le design et les styles.
+* **XLSX (SheetJS)** pour l’exportation des données en fichier Excel.
+
+---
+
+### 🧩 Structure Fonctionnelle et Logique Métier
+
+#### 1. **En-tête**
+
+* Logos **Konecta** et **Amplifon** en haut.
+* Titre principal (emoji inclus) pour donner une identité claire à l’outil.
+* Lien vers le "Grand écran avancé" (version projection ou TV). Ce lien est statique mais permet de basculer vers une vue dédiée.
+
+#### 2. **Résumé Objectifs Globaux (Bloc Récapitulatif)**
+
+* Colonne CRM et Colonne Digital :
+
+  * `agents.length` (nombre d’agents actifs sur cette section)
+  * `Objectif total = somme des objectifs`.
+  * `RDV restants = somme des objectifs restants actuels`.
+
+#### 3. **Ajout d’un Agent**
+
+* Formulaire en 3 étapes :
+
+  1. Nom de l’agent (obligatoire, champ texte).
+  2. Objectif (nombre par défaut = 20, modifiable).
+  3. Cases à cocher : CRM / Digital pour déterminer la campagne assignée.
+
+**À l’ajout :**
+
+```js
+const newEntry = {
+  name: newAgent.trim(),
+  objectif: Number(newObjective),
+  currentCRM: isCRM ? Number(newObjective) : null,
+  currentDigital: isDigital ? Number(newObjective) : null
+};
+```
+
+Ce qui signifie : un agent peut avoir un objectif sur CRM, sur Digital, ou les deux. Ces valeurs sont initialisées et modifiables ensuite manuellement.
+
+#### 4. **Réinitialisation des objectifs**
+
+* Bouton qui remet tous les `currentCRM` et `currentDigital` à leur valeur initiale `objectif`.
+
+```js
+setAgents(prev => prev.map(a => ({
+  ...a,
+  currentCRM: a.objectif,
+  currentDigital: a.objectif
+})));
+```
+
+#### 5. **Répartition des RDV totaux** (CRM ou Digital)
+
+* L'utilisateur saisit une valeur `rdvCRMTotal` ou `rdvDigitalTotal`.
+* À la répartition :
+
+```js
+const rdvParAgent = Math.floor(rdvTotal / agentCount);
+const reste = rdvTotal % agentCount;
+```
+
+* Chaque agent reçoit `rdvParAgent`, et les `reste` premiers agents reçoivent +1.
+* Cela permet une distribution **équitable**, tout en respectant le total.
+
+#### 6. **Affichage Agents sous forme de Cartes**
+
+Chaque carte d’agent contient :
+
+* Nom de l’agent.
+* Emoji selon l’avancement :
+
+```js
+const ratio = 1 - current / objectif;
+```
+
+* 👑 ≥ 100%
+* 🔥 ≥ 75%
+* 💪 ≥ 50%
+* ⚡ ≥ 25%
+* 🕓 sinon
+* Input modifiable : heures de travail (par défaut `1`)
+* Texte : "Il te reste X rendez-vous" ou "Tu as fait Y bonus !"
+* RDV/h est calculé ainsi :
+
+```js
+(totalRDV / somme des heures totales saisies)
+```
+
+* Boutons ➖ ➕ qui déclenchent :
+
+```js
+updateCount(index, delta, type);
+```
+
+* Si la valeur devient < 0, et que c’est la première fois → déclenche une alerte :
+
+```js
+alert(`🎉 Bravo ${agent.name} ! Tu as dépassé ton objectif...`)
+```
+
+#### 7. **Top 3 Agents CRM & Digital**
+
+* Méthode : trie des agents sur la différence `objectif - current` décroissante.
+* Les 3 meilleurs sont affichés en haut dans un encart animé avec leurs stats.
+* Bonus : si un agent est en **bonus** (valeur < 0), on affiche un ⭐ animé.
+
+#### 8. **Export Excel**
+
+* Export de l’état actuel des agents dans une feuille `.xlsx` :
+
+```js
+Agent, Objectif, RDV CRM Restants, RDV Digitaux Restants
+```
+
+Utilise la lib `xlsx` pour cela :
+
+```js
+XLSX.utils.json_to_sheet([...]);
+XLSX.writeFile(...);
+```
+
+---
+
+### 🎨 Expérience Utilisateur (UX/UI)
+
+* Design motivant : emojis, animations `bounce` et `ping`, couleurs Tailwind (`green-500`, `blue-100`, etc.)
+* Interface en grille responsive (`grid-cols-1`, `md:grid-cols-2`, `lg:grid-cols-3`).
+* Progress bar :
+
+```html
+<div style="width: ${ratioGlobal * 100}%">...</div>
+```
+
+* Retours visuels à chaque interaction (click, ajout, modif, bonus).
+
+---
+
+### 🧠 Résumé des Comportements Clés
+
+| Action           | Résultat                 | Logique              | Feedback                       |
+| ---------------- | ------------------------ | -------------------- | ------------------------------ |
+| Ajouter un agent | Ajoute à la liste        | Push dans le state   | Reset du champ + UI            |
+| Répartir les RDV | Calcul équitable         | floor() + modulo     | Mise à jour instantanée        |
+| ➕ ➖ boutons      | Incrémente ou décrémente | delta sur `currentX` | Animation + Alert Bonus si < 0 |
+| Modifier heures  | Change le RDV/h          | Utilisé dans calcul  | Dynamique                      |
+| Export Excel     | Génère fichier           | XLSX Sheet           | Téléchargement auto            |
+
+---
+
+### ✅ Objectif Final
+
+Permettre à un responsable de visualiser **en temps réel** :
+
+* Les écarts par agent.
+* Le nombre d’agents performants.
+* La dynamique collective (progression totale). Et permettre **à chaque agent** de se situer dans l’effort collectif, via une interface simple, visuelle, motivante et directe.
+
+---
+
+Fin du cahier des charges technique fonctionnel (destiné à Bolt.new ou IA front-end builder).
+
+🔧 Fichier principal : `Dashboard.jsx` 🎨 Styles intégrés via TailwindCSS 🧾 Export structuré : `.xlsx` 📊 Ratio, bonus et performances calculés dynamiquement en JS pur
