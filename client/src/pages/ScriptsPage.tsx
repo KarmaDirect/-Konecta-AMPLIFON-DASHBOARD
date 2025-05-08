@@ -178,9 +178,14 @@ export default function ScriptsPage() {
 
   return (
     <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-12 bg-white p-1 rounded" />
+        <h1 className="text-3xl font-bold text-center text-blue-900">📝 Scripts de Campagne</h1>
+        <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
+      </div>
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scripts de Campagne</h1>
           <p className="text-muted-foreground mt-1">
             Gérez les scripts pour différentes campagnes et catégories
           </p>

@@ -312,16 +312,10 @@ export default function Dashboard() {
 
         <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 Mission RDV Master : Suivi Agents CRM & Digitaux</h1>
 
-        <div className="text-center flex flex-col md:flex-row items-center justify-center gap-3">
-          <a href="/grand-ecran" className="inline-block mt-2 px-4 py-2 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors duration-200 shadow-md">
-            🖥️ Accéder au Grand Écran Avancé
-          </a>
-          <a href="/scripts" className="inline-block mt-2 px-4 py-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 shadow-md">
-            📝 Gérer les Scripts de Campagne
-          </a>
-          <div className="mt-2 px-4 py-2 rounded-lg shadow-md bg-gradient-to-r from-purple-600 to-blue-600">
-            <GrandEcranGenerator crmAgents={crmAgents} digitalAgents={digitalAgents} />
-          </div>
+        <div className="text-center mb-6">
+          <p className="text-gray-600 italic">
+            Utilisez le menu en haut pour accéder au Grand Écran ou à la page des Scripts
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center bg-gray-100 p-4 rounded-xl border-2 border-blue-300 shadow-md">
