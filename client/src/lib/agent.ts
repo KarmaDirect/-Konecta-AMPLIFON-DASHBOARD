@@ -4,6 +4,7 @@ export interface Agent {
   currentCRM: number | null;
   currentDigital: number | null;
   hours?: number;
+  type?: "HOT" | "PROSPECT";
 }
 
 export const getEmoji = (current: number | null, objectif: number): string => {
@@ -33,10 +34,49 @@ export const getTopAgents = (agents: Agent[], type: "currentCRM" | "currentDigit
     .slice(0, limit);
 };
 
+export const getBottomAgents = (agents: Agent[], type: "currentCRM" | "currentDigital", limit = 3): Agent[] => {
+  return [...agents]
+    .filter(a => a[type] !== null)
+    .sort((a, b) => {
+      const aRatio = getAgentCompletionRatio(a, type);
+      const bRatio = getAgentCompletionRatio(b, type);
+      return aRatio - bRatio;
+    })
+    .slice(0, limit);
+};
+
 export const getTotalRdvCompleted = (agents: Agent[], type: "currentCRM" | "currentDigital"): number => {
   return agents.reduce((sum, a) => {
     if (a[type] === null) return sum;
     const completed = a.objectif - a[type];
     return sum + (completed > 0 ? completed : 0);
   }, 0);
+};
+
+export const getAgentRdvPerHour = (agent: Agent): number => {
+  return agent.type === "HOT" ? 3 : 2; // HOT = 3/h, PROSPECT = 2/h
+};
+
+export const getEncouragementMessage = (agent: Agent, type: "currentCRM" | "currentDigital"): string => {
+  const ratio = getAgentCompletionRatio(agent, type);
+  
+  if (ratio < 0.25) {
+    return `${agent.name}, c'est le moment de se motiver ! Tu peux y arriver ! 💪`;
+  } else if (ratio < 0.5) {
+    return `Allez ${agent.name}, encore un petit effort ! Tu es sur la bonne voie ! 🚀`;
+  } else {
+    return `${agent.name}, tu as déjà bien avancé ! Continue comme ça ! ⚡`;
+  }
+};
+
+export const getCongratulationMessage = (agent: Agent, type: "currentCRM" | "currentDigital"): string => {
+  const completed = agent.objectif - (agent[type] || 0);
+  
+  if (agent[type] !== null && agent[type] < 0) {
+    return `🌟 BRAVO ${agent.name} ! Tu as dépassé ton objectif avec ${Math.abs(agent[type])} rendez-vous bonus ! Exceptionnel ! 🏆`;
+  } else if (completed >= agent.objectif) {
+    return `🎉 Félicitations ${agent.name} ! Objectif atteint à 100% ! Superbe performance ! 👑`;
+  } else {
+    return `✨ Excellent travail ${agent.name} ! Tu es parmi les meilleurs ! Continue comme ça ! 🔥`;
+  }
 };

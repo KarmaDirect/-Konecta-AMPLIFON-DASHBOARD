@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [newObjective, setNewObjective] = useState(20);
   const [rdvCRMTotal, setRdvCRMTotal] = useState(100);
   const [rdvDigitalTotal, setRdvDigitalTotal] = useState(50);
+  const [agentType, setAgentType] = useState<"HOT" | "PROSPECT">("HOT");
 
   // Load agents from localStorage on component mount
   useEffect(() => {
@@ -44,7 +45,8 @@ export default function Dashboard() {
         objectif: Number(newObjective),
         currentCRM: isCRM ? Number(newObjective) : null,
         currentDigital: isDigital ? Number(newObjective) : null,
-        hours: 1
+        hours: 1,
+        type: agentType
       };
       setAgents([...agents, newEntry]);
       setNewAgent("");
@@ -243,6 +245,17 @@ export default function Dashboard() {
                   value={newObjective}
                   onChange={(e) => setNewObjective(parseInt(e.target.value) || 1)}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="whitespace-nowrap">Type d'agent:</label>
+                <select
+                  value={agentType}
+                  onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT")}
+                  className="border border-gray-300 px-3 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="HOT">HOT (3 RDV/h)</option>
+                  <option value="PROSPECT">PROSPECT (2 RDV/h)</option>
+                </select>
               </div>
             </div>
           </div>
