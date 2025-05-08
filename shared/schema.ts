@@ -106,7 +106,32 @@ export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
+// Table des scripts de campagnes
+export const campaignScripts = pgTable("campaign_scripts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  campaignName: text("campaign_name").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // Catégorie (ex: HOT, PROSPECT, DIGI, etc.)
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0), // Pour l'ordre d'affichage
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCampaignScriptSchema = createInsertSchema(campaignScripts).pick({
+  title: true,
+  campaignName: true,
+  content: true,
+  category: true,
+  isActive: true,
+  priority: true,
+});
+
+export type InsertCampaignScript = z.infer<typeof insertCampaignScriptSchema>;
+
 // Types d'inférence
 export type Agent = typeof agents.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+export type CampaignScript = typeof campaignScripts.$inferSelect;

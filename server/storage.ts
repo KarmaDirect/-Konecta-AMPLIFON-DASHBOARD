@@ -2,7 +2,8 @@ import {
   users, type User, type InsertUser,
   agents, type Agent, type InsertAgent,
   achievements, type Achievement, type InsertAchievement,
-  activityLogs, type ActivityLog, type InsertActivityLog
+  activityLogs, type ActivityLog, type InsertActivityLog,
+  campaignScripts, type CampaignScript, type InsertCampaignScript
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull, desc, not } from "drizzle-orm";
@@ -34,6 +35,15 @@ export interface IStorage {
   getActivityLogs(): Promise<ActivityLog[]>;
   getActivityLogsByAgentId(agentId: number): Promise<ActivityLog[]>;
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
+  
+  // Scripts de campagne
+  getCampaignScripts(): Promise<CampaignScript[]>;
+  getCampaignScriptById(id: number): Promise<CampaignScript | undefined>;
+  getCampaignScriptsByCategory(category: string): Promise<CampaignScript[]>;
+  getCampaignScriptsByCampaignName(campaignName: string): Promise<CampaignScript[]>;
+  createCampaignScript(script: InsertCampaignScript): Promise<CampaignScript>;
+  updateCampaignScript(id: number, script: Partial<InsertCampaignScript>): Promise<CampaignScript | undefined>;
+  deleteCampaignScript(id: number): Promise<boolean>;
 }
 
 // Implémentation de l'interface avec la base de données PostgreSQL via Drizzle
