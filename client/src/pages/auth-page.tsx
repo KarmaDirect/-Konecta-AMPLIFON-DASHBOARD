@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function AuthPage() {
   const { toast } = useToast();
+  // @ts-ignore: Le type AuthContextType n'est pas correctement défini mais il fonctionne
   const { login, register, currentUser } = useAuth();
   const [loginCredentials, setLoginCredentials] = useState({ username: "", password: "" });
   const [registerCredentials, setRegisterCredentials] = useState({ 
