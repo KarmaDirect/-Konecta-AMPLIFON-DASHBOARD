@@ -277,7 +277,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <img src="/Konecta-Logo.png" alt="Konecta" className="h-12" />
+            <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-12 bg-white p-1 rounded" />
           </div>
           <div className="flex items-center gap-4">
             {currentUser ? (
@@ -306,7 +306,7 @@ export default function Dashboard() {
                 🔑 Connexion
               </a>
             )}
-            <img src="/Amplifon-Logo.png" alt="Amplifon" className="h-10" />
+            <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
           </div>
         </div>
 
