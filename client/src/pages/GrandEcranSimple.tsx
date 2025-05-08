@@ -129,14 +129,14 @@ export default function GrandEcranSimple() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white p-4 md:p-6">
       <header className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-12 bg-white p-1 rounded" />
+          {/* Pas besoin de dupliquer les logos ici car ils sont déjà dans la barre de navigation */}
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold">🎯 Grand Écran - RDV Master</h1>
             <p className="text-lg opacity-70">
               Mise à jour: {lastRefresh.toLocaleTimeString()}
             </p>
           </div>
-          <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
+          <div></div>{/* Placeholder pour maintenir la mise en page en 3 colonnes */}
         </div>
         
         {/* Totaux et progression */}

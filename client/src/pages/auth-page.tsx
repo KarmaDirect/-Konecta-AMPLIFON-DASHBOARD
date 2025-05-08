@@ -80,10 +80,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         <div className="order-2 md:order-1">
-          <div className="flex justify-between items-center mb-6 w-full max-w-md mx-auto">
-            <img src="/attached_assets/Konecta-Logo.png" alt="Konecta" className="h-12 bg-white p-1 rounded" />
-            <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" className="h-10 bg-white p-1 rounded" />
-          </div>
+          {/* Logos supprimés pour éviter la duplication avec la barre de navigation */}
           <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login">Connexion</TabsTrigger>
