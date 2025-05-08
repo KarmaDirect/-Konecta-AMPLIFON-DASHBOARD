@@ -421,43 +421,48 @@ export default function Dashboard() {
           </div>
         )}
 
-        <ActivityFeed />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <TopAgents 
+              title="🏅 Top 3 CRM" 
+              agents={topCRMAgents}
+              type="currentCRM"
+            />
 
-        <TopAgents 
-          title="🏅 Top 3 CRM" 
-          agents={topCRMAgents}
-          type="currentCRM"
-        />
+            <AppointmentSection
+              title="📋 RDV CRM"
+              agents={agents}
+              type="currentCRM"
+              rdvTotal={rdvCRMTotal}
+              setRdvTotal={setRdvCRMTotal}
+              onDispatchRdv={dispatchRdv}
+              onRemoveAgent={removeAgent}
+              onUpdateCount={updateCount}
+              onUpdateHours={updateAgentHours}
+            />
 
-        <AppointmentSection
-          title="📋 RDV CRM"
-          agents={agents}
-          type="currentCRM"
-          rdvTotal={rdvCRMTotal}
-          setRdvTotal={setRdvCRMTotal}
-          onDispatchRdv={dispatchRdv}
-          onRemoveAgent={removeAgent}
-          onUpdateCount={updateCount}
-          onUpdateHours={updateAgentHours}
-        />
+            <TopAgents 
+              title="🏅 Top 3 Digitaux" 
+              agents={topDigitalAgents}
+              type="currentDigital"
+            />
 
-        <TopAgents 
-          title="🏅 Top 3 Digitaux" 
-          agents={topDigitalAgents}
-          type="currentDigital"
-        />
-
-        <AppointmentSection
-          title="💻 RDV Digitaux"
-          agents={agents}
-          type="currentDigital"
-          rdvTotal={rdvDigitalTotal}
-          setRdvTotal={setRdvDigitalTotal}
-          onDispatchRdv={dispatchRdv}
-          onRemoveAgent={removeAgent}
-          onUpdateCount={updateCount}
-          onUpdateHours={updateAgentHours}
-        />
+            <AppointmentSection
+              title="💻 RDV Digitaux"
+              agents={agents}
+              type="currentDigital"
+              rdvTotal={rdvDigitalTotal}
+              setRdvTotal={setRdvDigitalTotal}
+              onDispatchRdv={dispatchRdv}
+              onRemoveAgent={removeAgent}
+              onUpdateCount={updateCount}
+              onUpdateHours={updateAgentHours}
+            />
+          </div>
+          <div className="lg:col-span-1 space-y-8">
+            <ActivityFeed />
+          </div>
+        </div>
 
         <div className="text-center pt-8 pb-4">
           <p className="text-sm text-gray-500">
