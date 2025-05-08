@@ -24,7 +24,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/grand-ecran" component={GrandEcran} />
-      <ProtectedRoute path="/scripts" component={ScriptsPage} />
+      <Route path="/scripts" component={ScriptsPage} />
       <Route component={NotFound} />
     </Switch>
   );
