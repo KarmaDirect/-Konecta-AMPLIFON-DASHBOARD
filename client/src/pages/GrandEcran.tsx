@@ -61,8 +61,8 @@ export default function GrandEcran() {
   const digitalAgents = agents.filter((a) => a.currentDigital !== null)
     .sort((a, b) => getAgentCompletionRatio(b, "currentDigital") - getAgentCompletionRatio(a, "currentDigital"));
     
-  const topCRMAgents = getTopAgents(agents, "currentCRM", 3);
-  const topDigitalAgents = getTopAgents(agents, "currentDigital", 3);
+  const topCRMAgents = getTopAgents(agents, "currentCRM", 5);
+  const topDigitalAgents = getTopAgents(agents, "currentDigital", 5);
   
   const bottomCRMAgents = getBottomAgents(agents, "currentCRM", 3);
   const bottomDigitalAgents = getBottomAgents(agents, "currentDigital", 3);

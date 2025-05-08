@@ -61,13 +61,6 @@ export function AgentCard({
       setDisplayHours(agent.hours);
     }
   }, [agent.hours]);
-
-  // Handler pour mettre à jour les heures
-  const handleHoursChange = (delta: number) => {
-    const newHours = Math.max(1, displayHours + delta);
-    setDisplayHours(newHours);
-    onUpdateHours(index, newHours);
-  };
   
   // Handler pour demander de l'aide
   const handleToggleHelp = () => {
@@ -131,23 +124,7 @@ export function AgentCard({
             </Button>
           </div>
           <div className="flex items-center">
-            <span className="text-sm mr-2">Heures:</span>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => handleHoursChange(-1)}
-              disabled={displayHours <= 1}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="mx-2">{displayHours}</span>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => handleHoursChange(1)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <span className="text-sm">Heures: {displayHours}</span>
           </div>
         </div>
       </CardContent>
