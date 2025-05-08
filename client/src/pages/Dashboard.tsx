@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTeamPresence } from "@/hooks/use-team-presence";
 import { wsClient } from "@/lib/websocket";
 import { TeamPresenceIndicator } from "@/components/TeamPresenceIndicator";
+import { GrandEcranGenerator } from "@/components/GrandEcranGenerator";
 
 export default function Dashboard() {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -318,6 +319,9 @@ export default function Dashboard() {
           <a href="/scripts" className="inline-block mt-2 px-4 py-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors duration-200 shadow-md">
             📝 Gérer les Scripts de Campagne
           </a>
+          <div className="mt-2 px-4 py-2 rounded-lg shadow-md bg-gradient-to-r from-purple-600 to-blue-600">
+            <GrandEcranGenerator crmAgents={crmAgents} digitalAgents={digitalAgents} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center bg-gray-100 p-4 rounded-xl border-2 border-blue-300 shadow-md">
