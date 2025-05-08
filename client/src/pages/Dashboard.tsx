@@ -250,11 +250,12 @@ export default function Dashboard() {
                 <label className="whitespace-nowrap">Type d'agent:</label>
                 <select
                   value={agentType}
-                  onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT")}
+                  onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT" | "DIGI")}
                   className="border border-gray-300 px-3 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="HOT">HOT (3 RDV/h)</option>
                   <option value="PROSPECT">PROSPECT (2 RDV/h)</option>
+                  <option value="DIGI">DIGI (5 RDV/h)</option>
                 </select>
               </div>
             </div>

@@ -4,7 +4,7 @@ export interface Agent {
   currentCRM: number | null;
   currentDigital: number | null;
   hours?: number;
-  type?: "HOT" | "PROSPECT";
+  type?: "HOT" | "PROSPECT" | "DIGI";
 }
 
 export const getEmoji = (current: number | null, objectif: number): string => {
@@ -54,7 +54,9 @@ export const getTotalRdvCompleted = (agents: Agent[], type: "currentCRM" | "curr
 };
 
 export const getAgentRdvPerHour = (agent: Agent): number => {
-  return agent.type === "HOT" ? 3 : 2; // HOT = 3/h, PROSPECT = 2/h
+  if (agent.type === "HOT") return 3; // HOT = 3/h
+  if (agent.type === "DIGI") return 5; // DIGI = 5/h
+  return 2; // PROSPECT = 2/h (default)
 };
 
 export const getEncouragementMessage = (agent: Agent, type: "currentCRM" | "currentDigital"): string => {
