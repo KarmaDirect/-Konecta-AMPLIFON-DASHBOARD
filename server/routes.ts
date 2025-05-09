@@ -480,6 +480,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Réinitialisation de tous les agents
+  app.post("/api/agents/reset-all", async (req: any, res: Response) => {
+    try {
+      // Récupérer tous les agents
+      const agents = await storage.getAgents();
+      
+      // Mettre à jour chaque agent
+      const updatedAgents = await Promise.all(
+        agents.map(async (agent) => {
+          // Réinitialiser CRM et Digital aux valeurs d'objectif
+          const updates = {
+            currentCRM: agent.currentCRM !== null ? agent.objectif : null,
+            currentDigital: agent.currentDigital !== null ? agent.objectif : null
+          };
+          
+          return await storage.updateAgent(agent.id, updates);
+        })
+      );
+      
+      // Filtrer les agents qui n'ont pas été mis à jour (undefined)
+      const successfullyUpdated = updatedAgents.filter(Boolean) as any[];
+      
+      // Notification en temps réel pour chaque agent
+      successfullyUpdated.forEach(agent => {
+        req.broadcast({
+          type: 'agent_updated',
+          data: { agent }
+        });
+      });
+      
+      res.json(successfullyUpdated);
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation des agents:", error);
+      res.status(500).json({ error: "Erreur lors de la réinitialisation des agents" });
+    }
+  });
+
+  // Répartition des RDV
+  app.post("/api/agents/dispatch-rdv", async (req: any, res: Response) => {
+    try {
+      const { type, rdvTotal } = req.body;
+      
+      if (!type || !['currentCRM', 'currentDigital'].includes(type)) {
+        return res.status(400).json({ error: "Type de RDV invalide" });
+      }
+      
+      if (typeof rdvTotal !== 'number' || rdvTotal <= 0) {
+        return res.status(400).json({ error: "Nombre de RDV invalide" });
+      }
+      
+      // Récupérer les agents concernés
+      const allAgents = await storage.getAgents();
+      const filteredAgents = allAgents.filter(agent => agent[type] !== null);
+      const agentCount = filteredAgents.length;
+      
+      if (agentCount === 0) {
+        return res.status(400).json({ 
+          error: `Aucun agent ${type === "currentCRM" ? "CRM" : "Digital"} disponible`
+        });
+      }
+      
+      // Calcul de la répartition
+      const rdvPerAgent = Math.floor(rdvTotal / agentCount);
+      const remainder = rdvTotal % agentCount;
+      
+      // Mise à jour de chaque agent
+      const updatedAgents = await Promise.all(
+        allAgents.map(async (a, index) => {
+          if (a[type] === null) return a;
+          
+          // Trouver l'index de cet agent dans la liste filtrée
+          const filteredIndex = filteredAgents.findIndex(fa => fa.id === a.id);
+          const bonus = filteredIndex < remainder ? 1 : 0;
+          const newObjectif = rdvPerAgent + bonus;
+          
+          // Calcul du nombre de RDV déjà pris par cet agent
+          const currentRdvValue = a[type] as number;
+          const originalObjectif = a.objectif;
+          
+          // Si l'agent a déjà des RDV pris (compteur < objectif initial ou négatif)
+          let rdvPris = 0;
+          if (currentRdvValue < 0) {
+            // RDV bonus : tous les RDV pris plus les RDV bonus
+            rdvPris = originalObjectif + Math.abs(currentRdvValue);
+          } else if (currentRdvValue < originalObjectif) {
+            // RDV normaux : différence entre l'objectif et le compteur actuel
+            rdvPris = originalObjectif - currentRdvValue;
+          }
+          
+          // Le nouveau compteur est le nouvel objectif moins les RDV déjà pris
+          // Si l'agent a pris plus que son nouvel objectif, il aura un compteur négatif (bonus)
+          const newCounterValue = Math.max(newObjectif - rdvPris, -Math.abs(rdvPris - newObjectif));
+          
+          // Mettre à jour l'agent
+          const updates = {
+            objectif: newObjectif,
+            [type]: newCounterValue
+          };
+          
+          const updatedAgent = await storage.updateAgent(a.id, updates);
+          return updatedAgent || a;
+        })
+      );
+      
+      // Notification en temps réel pour chaque agent
+      updatedAgents.forEach(agent => {
+        if (agent[type] !== null) {
+          req.broadcast({
+            type: 'agent_updated',
+            data: { agent }
+          });
+        }
+      });
+      
+      res.json(updatedAgents);
+    } catch (error) {
+      console.error("Erreur lors de la répartition des RDV:", error);
+      res.status(500).json({ error: "Erreur lors de la répartition des RDV" });
+    }
+  });
+
   // API pour les réalisations
   app.get("/api/achievements", async (req: Request, res: Response) => {
     try {
