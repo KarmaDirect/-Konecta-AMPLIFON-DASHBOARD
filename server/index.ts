@@ -16,34 +16,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configuration du stockage de session
-const PgSession = connectPgSimple(session);
-
-// Créer la table de session si elle n'existe pas
-(async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS "session" (
-        "sid" varchar NOT NULL COLLATE "default",
-        "sess" json NOT NULL,
-        "expire" timestamp(6) NOT NULL,
-        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
-      );
-      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
-    `);
-    console.log("Table de session vérifiée/créée avec succès");
-  } catch (err) {
-    console.error("Erreur lors de la création de la table de session:", err);
-  }
-})();
+// Configuration du stockage de session en mémoire (temporaire)
+import MemoryStore from "memorystore";
+const MemStoreSession = MemoryStore(session);
 
 // Configuration de la session
 app.use(session({
-  store: new PgSession({
-    pool,
-    tableName: 'session',
-    createTableIfMissing: true,
-    pruneSessionInterval: 60, // Nettoyer les sessions expirées toutes les 60 secondes
+  store: new MemStoreSession({
+    checkPeriod: 86400000, // Purge des sessions expirées toutes les 24h
   }),
   secret: process.env.SESSION_SECRET || 'konecta-amplifon-secret',
   resave: true, // Forcer la sauvegarde de session même si non modifiée

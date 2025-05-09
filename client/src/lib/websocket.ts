@@ -99,11 +99,11 @@ export class WebSocketClient {
   }
 
   private startHeartbeat() {
-    // Envoyer une mise à jour de présence toutes les 30 secondes
+    // Envoyer une mise à jour de présence toutes les 60 secondes pour économiser des ressources
     this.heartbeatInterval = setInterval(() => {
-      // Vérifier si l'utilisateur est inactif depuis plus de 2 minutes
+      // Vérifier si l'utilisateur est inactif depuis plus de 3 minutes (augmenté pour réduire les mises à jour)
       const inactiveTime = Date.now() - this.lastActivityTime;
-      if (inactiveTime > 2 * 60 * 1000 && this.currentStatus === 'online') {
+      if (inactiveTime > 3 * 60 * 1000 && this.currentStatus === 'online') {
         this.currentStatus = 'away';
       }
       
@@ -112,9 +112,11 @@ export class WebSocketClient {
         this.sendPresence();
       } 
       
-      // Vérifier périodiquement l'état d'authentification
-      this.send('auth_check', { timestamp: Date.now() });
-    }, 30000); // 30 secondes
+      // Vérifier périodiquement l'état d'authentification (toutes les 2 minutes au lieu de 30s)
+      if (Date.now() % (2 * 60 * 1000) < 60000) { // Ne vérifier que toutes les 2 minutes
+        this.send('auth_check', { timestamp: Date.now() });
+      }
+    }, 60000); // 60 secondes au lieu de 30 secondes
   }
 
   private stopHeartbeat() {

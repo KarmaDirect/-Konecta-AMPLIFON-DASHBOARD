@@ -215,14 +215,14 @@ export default function ResourcesPage() {
   return (
     <div className="container mx-auto py-6">
       {/* Titre sans logos (logos déjà dans la barre de navigation) */}
-      <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">📝 Scripts de Campagne Amplifon</h1>
+      <h1 className="text-3xl font-bold text-center text-blue-900 mb-6">📚 Ressources de Campagne Amplifon</h1>
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <p className="text-muted-foreground mt-1">
             {isAdmin 
-              ? "Gérez les scripts pour différentes campagnes et catégories" 
-              : "Consultez les scripts pour différentes campagnes et catégories"}
+              ? "Gérez les ressources (scripts, conseils, objections, images) pour différentes campagnes" 
+              : "Consultez les ressources pour différentes campagnes et catégories"}
           </p>
         </div>
         {isAdmin && (
@@ -233,7 +233,7 @@ export default function ResourcesPage() {
             }}
             className="mt-4 md:mt-0"
           >
-            <PlusCircleIcon className="mr-2 h-4 w-4" /> Nouveau Script
+            <PlusCircleIcon className="mr-2 h-4 w-4" /> Nouvelle Ressource
           </Button>
         )}
       </div>
@@ -242,7 +242,7 @@ export default function ResourcesPage() {
         <div className="relative flex-1">
           <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un script..."
+            placeholder="Rechercher une ressource..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -265,7 +265,7 @@ export default function ResourcesPage() {
               <SelectValue placeholder="Filtrer par campagne" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les scripts</SelectItem>
+              <SelectItem value="all">Toutes les ressources</SelectItem>
               {campaignCategories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -286,13 +286,13 @@ export default function ResourcesPage() {
       <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab}>
         <TabsList className="mb-6 flex flex-wrap">
           <TabsTrigger value="all">Tous</TabsTrigger>
-          {scriptCategories.map(category => (
+          {campaignCategories.map(category => (
             <TabsTrigger key={category.id} value={category.id}>
               {category.name}
             </TabsTrigger>
           ))}
           {categories
-            .filter(cat => !scriptCategories.map(sc => sc.id).includes(cat))
+            .filter(cat => !campaignCategories.map(sc => sc.id).includes(cat))
             .map((category) => (
             <TabsTrigger key={category} value={category}>
               {category.toUpperCase()}
@@ -301,18 +301,18 @@ export default function ResourcesPage() {
         </TabsList>
 
         {/* Contenu pour tous les onglets */}
-        {scriptCategories.map(category => (
+        {campaignCategories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
             <div className={`bg-${category.color}-50 p-4 rounded-lg border border-${category.color}-100 mb-6`}>
-              <h2 className={`text-xl font-bold text-${category.color}-800 mb-2`}>Scripts {category.name}</h2>
+              <h2 className={`text-xl font-bold text-${category.color}-800 mb-2`}>Ressources {category.name}</h2>
               <p className="text-gray-700 mb-4">{category.description}</p>
             </div>
             
             {filteredScripts?.length === 0 ? (
               <Alert>
-                <AlertTitle>Aucun script trouvé</AlertTitle>
+                <AlertTitle>Aucune ressource trouvée</AlertTitle>
                 <AlertDescription>
-                  Aucun script ne correspond à votre recherche. Essayez avec des termes différents ou créez un nouveau script.
+                  Aucune ressource ne correspond à votre recherche. Essayez avec des termes différents ou créez une nouvelle ressource.
                 </AlertDescription>
               </Alert>
             ) : (
