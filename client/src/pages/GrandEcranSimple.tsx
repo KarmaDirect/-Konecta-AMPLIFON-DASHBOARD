@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAgents } from "@/hooks/use-agents";
+import { useAgents, useCRMAgents, useDigitalAgents } from "@/hooks/use-agents";
 import { Agent, getEmoji } from "@/lib/agent";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GrandEcranSimple() {
-  const { data: agents = [] } = useAgents();
+  const { data: allAgents = [], isLoading: isAllAgentsLoading } = useAgents();
+  const { data: crmAgentsData = [], isLoading: isCRMLoading } = useCRMAgents();
+  const { data: digitalAgentsData = [], isLoading: isDigitalLoading } = useDigitalAgents();
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const { toast } = useToast();
   
   // Rafraîchissement automatique des données
   useEffect(() => {
@@ -17,16 +22,25 @@ export default function GrandEcranSimple() {
     return () => clearInterval(intervalId);
   }, []);
   
-  const crmAgents = agents
-    .filter(a => a.currentCRM !== null)
+  // Notifie l'utilisateur quand les données sont chargées
+  useEffect(() => {
+    if (!isAllAgentsLoading && !isCRMLoading && !isDigitalLoading) {
+      toast({
+        title: "Données chargées",
+        description: "Les statistiques sont à jour",
+        variant: "default"
+      });
+    }
+  }, [isAllAgentsLoading, isCRMLoading, isDigitalLoading, toast]);
+  
+  const crmAgents = crmAgentsData
     .sort((a, b) => {
       const aRatio = (a.currentCRM || 0) / a.objectif;
       const bRatio = (b.currentCRM || 0) / b.objectif;
       return bRatio - aRatio;
     });
 
-  const digitalAgents = agents
-    .filter(a => a.currentDigital !== null)
+  const digitalAgents = digitalAgentsData
     .sort((a, b) => {
       const aRatio = (a.currentDigital || 0) / a.objectif;
       const bRatio = (b.currentDigital || 0) / b.objectif;
@@ -124,6 +138,16 @@ export default function GrandEcranSimple() {
   const handleBack = () => {
     window.history.back();
   };
+
+  if (isAllAgentsLoading || isCRMLoading || isDigitalLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white flex flex-col justify-center items-center p-4 md:p-6">
+        <Loader2 className="h-12 w-12 animate-spin text-white mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Chargement des données...</h2>
+        <p className="text-lg opacity-70">Veuillez patienter pendant que nous récupérons les statistiques</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white p-4 md:p-6">
