@@ -73,8 +73,13 @@ export default function GrandEcran() {
   const totalCRMCompleted = getTotalRdvCompleted(crmAgents, "currentCRM");
   const totalDigitalCompleted = getTotalRdvCompleted(digitalAgents, "currentDigital");
   
-  const crmCompletionRate = totalCRM ? Math.round((totalCRMCompleted / totalCRM) * 100) : 0;
-  const digitalCompletionRate = totalDigital ? Math.round((totalDigitalCompleted / totalDigital) * 100) : 0;
+  // Calcul du taux d'accomplissement basé sur la moyenne des ratios de complétion des agents
+  const crmCompletionRate = getAverageCompletionRate(crmAgents, "currentCRM");
+  const digitalCompletionRate = getAverageCompletionRate(digitalAgents, "currentDigital");
+  
+  // Calcul alternatif basé sur le total des RDV complétés
+  const crmTotalCompletionRate = totalCRM ? Math.round((totalCRMCompleted / totalCRM) * 100) : 0;
+  const digitalTotalCompletionRate = totalDigital ? Math.round((totalDigitalCompleted / totalDigital) * 100) : 0;
   
   const totalBonusCRM = crmAgents.reduce((sum, a) => {
     if (a.currentCRM === null || a.currentCRM >= 0) return sum;

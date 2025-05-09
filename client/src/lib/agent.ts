@@ -121,6 +121,18 @@ export const getTotalRdvCompleted = (agents: Agent[], type: "currentCRM" | "curr
   }, 0);
 };
 
+// Calcule le pourcentage d'accomplissement moyen des agents
+export const getAverageCompletionRate = (agents: Agent[], type: "currentCRM" | "currentDigital"): number => {
+  if (agents.length === 0) return 0;
+  
+  const totalRatio = agents.reduce((sum, agent) => {
+    if (agent[type] === null) return sum;
+    return sum + getAgentCompletionRatio(agent, type);
+  }, 0);
+  
+  return Math.round((totalRatio / agents.length) * 100);
+};
+
 export const getAgentRdvPerHour = (agent: Agent): number => {
   if (agent.type === "HOT") return 3; // HOT = 3/h
   if (agent.type === "DIGI") return 5; // DIGI = 5/h
