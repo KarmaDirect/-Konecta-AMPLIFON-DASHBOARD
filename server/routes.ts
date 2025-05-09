@@ -532,7 +532,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Récupérer les agents concernés
       const allAgents = await storage.getAgents();
-      const filteredAgents = allAgents.filter(agent => agent[type] !== null);
+      const filteredAgents = allAgents.filter(agent => {
+        return type === 'currentCRM' 
+          ? agent.currentCRM !== null 
+          : agent.currentDigital !== null;
+      });
       const agentCount = filteredAgents.length;
       
       if (agentCount === 0) {
@@ -548,7 +552,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Mise à jour de chaque agent
       const updatedAgents = await Promise.all(
         allAgents.map(async (a, index) => {
-          if (a[type] === null) return a;
+          // Vérifier si l'agent a la propriété demandée
+          const hasProperty = type === 'currentCRM' 
+            ? a.currentCRM !== null 
+            : a.currentDigital !== null;
+            
+          if (!hasProperty) return a;
           
           // Trouver l'index de cet agent dans la liste filtrée
           const filteredIndex = filteredAgents.findIndex(fa => fa.id === a.id);
@@ -556,7 +565,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const newObjectif = rdvPerAgent + bonus;
           
           // Calcul du nombre de RDV déjà pris par cet agent
-          const currentRdvValue = a[type] as number;
+          const currentRdvValue = type === 'currentCRM' 
+            ? (a.currentCRM as number) 
+            : (a.currentDigital as number);
           const originalObjectif = a.objectif;
           
           // Si l'agent a déjà des RDV pris (compteur < objectif initial ou négatif)
@@ -573,11 +584,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Si l'agent a pris plus que son nouvel objectif, il aura un compteur négatif (bonus)
           const newCounterValue = Math.max(newObjectif - rdvPris, -Math.abs(rdvPris - newObjectif));
           
-          // Mettre à jour l'agent
-          const updates = {
-            objectif: newObjectif,
-            [type]: newCounterValue
+          // Créer l'objet de mise à jour
+          const updates: any = {
+            objectif: newObjectif
           };
+          
+          // Ajouter la propriété dynamique
+          updates[type] = newCounterValue;
           
           const updatedAgent = await storage.updateAgent(a.id, updates);
           return updatedAgent || a;
@@ -586,7 +599,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Notification en temps réel pour chaque agent
       updatedAgents.forEach(agent => {
-        if (agent[type] !== null) {
+        const hasProperty = type === 'currentCRM' 
+          ? agent.currentCRM !== null 
+          : agent.currentDigital !== null;
+          
+        if (hasProperty) {
           req.broadcast({
             type: 'agent_updated',
             data: { agent }

@@ -28,66 +28,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Charger l'utilisateur depuis localStorage au démarrage
+  // Charger l'utilisateur depuis le serveur au démarrage
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (error) {
+    // Vérifier si l'utilisateur est déjà connecté via une session
+    fetch('/api/user')
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          // Si le statut est 401 (non autorisé), l'utilisateur n'est pas connecté
+          if (response.status === 401) {
+            return null;
+          }
+          throw new Error('Erreur lors de la récupération de l\'utilisateur');
+        }
+      })
+      .then(user => {
+        if (user) {
+          setCurrentUser(user);
+        }
+      })
+      .catch(error => {
         console.error("Erreur lors du chargement de l'utilisateur:", error);
-        localStorage.removeItem("currentUser");
-      }
-    }
+      });
   }, []);
 
   const login = async (username: string, password: string) => {
     try {
-      // Vérifier si un utilisateur avec ce nom d'utilisateur existe déjà dans localStorage
-      const existingUsers = localStorage.getItem("registeredUsers");
-      let users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      // Rechercher l'utilisateur par nom d'utilisateur
-      const foundUser = users.find((user: any) => user.username === username);
-      
-      // Si aucun utilisateur n'est trouvé, rejeter la connexion
-      if (!foundUser) {
-        throw new Error("Utilisateur non trouvé");
-      }
-      
-      // Vérifier que le mot de passe existe et correspond exactement
-      if (!foundUser.password) {
-        throw new Error("Compte invalide - veuillez vous réinscrire");
-      }
-      
-      if (foundUser.password !== password) {
-        throw new Error("Mot de passe incorrect");
-      }
-      
-      // Créer l'objet utilisateur pour la session
-      const loggedInUser: User = {
-        id: foundUser.id || 1,
-        name: foundUser.name || username,
-        objectif: 10,
-        currentCRM: 0,
-        currentDigital: 0,
-        role: foundUser.role || "AGENT",
-      };
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      // Sauvegarde dans localStorage
-      localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
-      setCurrentUser(loggedInUser);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Nom d'utilisateur ou mot de passe incorrect";
+        throw new Error(errorMessage);
+      }
 
+      const user = await response.json();
+      setCurrentUser(user);
+      
       toast({
         title: "Connexion réussie",
-        description: `Bienvenue ${loggedInUser.name}!`,
+        description: `Bienvenue ${user.name}!`,
       });
-      
     } catch (error) {
       console.error("Erreur de connexion:", error);
       toast({
         title: "Erreur de connexion",
-        description: "Nom d'utilisateur ou mot de passe incorrect.",
+        description: error instanceof Error ? error.message : "Nom d'utilisateur ou mot de passe incorrect.",
         variant: "destructive",
       });
       throw error;
@@ -96,51 +89,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: RegisterData) => {
     try {
-      // Simulation d'inscription pour la démo
-      // Dans une vraie application, ce serait une requête API
-      const mockUser: User = {
-        id: 1,
-        name: userData.name,
-        objectif: 10,
-        currentCRM: 0,
-        currentDigital: 0,
-        role: userData.role,
-      };
-      
-      // Enregistrement de l'utilisateur dans la liste des utilisateurs enregistrés
-      const existingUsers = localStorage.getItem("registeredUsers");
-      let users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      // Vérifier si l'utilisateur existe déjà
-      const existingIndex = users.findIndex((user: any) => user.username === userData.username);
-      
-      if (existingIndex >= 0) {
-        // Mise à jour de l'utilisateur existant
-        users[existingIndex] = {
-          username: userData.username,
-          name: userData.name,
-          role: userData.role,
-          password: userData.password
-        };
-      } else {
-        // Ajout du nouvel utilisateur
-        users.push({
-          username: userData.username,
-          name: userData.name,
-          role: userData.role,
-          password: userData.password
-        });
-      }
-      
-      localStorage.setItem("registeredUsers", JSON.stringify(users));
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
 
-      // Sauvegarde dans localStorage pour la session courante
-      localStorage.setItem("currentUser", JSON.stringify(mockUser));
-      setCurrentUser(mockUser);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || "Erreur lors de l'inscription";
+        throw new Error(errorMessage);
+      }
+
+      const user = await response.json();
+      setCurrentUser(user);
 
       toast({
         title: "Inscription réussie",
-        description: `Bienvenue ${mockUser.name}!`,
+        description: `Bienvenue ${user.name}!`,
       });
     } catch (error) {
       console.error("Erreur d'inscription:", error);

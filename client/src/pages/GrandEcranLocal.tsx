@@ -11,38 +11,36 @@ export default function GrandEcranLocal() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const { toast } = useToast();
   
-  // Récupérer les données depuis localStorage, comme le fait le Dashboard
+  // Récupérer les données depuis l'API
   const loadAgents = () => {
     setIsLoading(true);
-    try {
-      const savedAgents = localStorage.getItem('rdvMasterAgents');
-      if (savedAgents) {
-        const parsedAgents = JSON.parse(savedAgents);
-        setAgents(parsedAgents);
-        
+    fetch('/api/agents')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setAgents(data);
         toast({
           title: "Données rafraîchies",
           description: "Les statistiques ont été mises à jour",
           variant: "default"
         });
-      } else {
+      })
+      .catch(err => {
+        console.error("Erreur lors du chargement des agents:", err);
         toast({
-          title: "Aucune donnée",
-          description: "Aucun agent n'a été trouvé dans le stockage local",
+          title: "Erreur de chargement",
+          description: "Impossible de charger les données des agents",
           variant: "destructive"
         });
-      }
-    } catch (err) {
-      console.error("Erreur lors du chargement des agents:", err);
-      toast({
-        title: "Erreur de chargement",
-        description: "Impossible de charger les données des agents",
-        variant: "destructive"
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setLastRefresh(new Date());
       });
-    } finally {
-      setIsLoading(false);
-      setLastRefresh(new Date());
-    }
   };
   
   // Chargement initial et rafraîchissement automatique
