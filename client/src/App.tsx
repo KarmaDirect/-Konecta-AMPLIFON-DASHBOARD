@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
 import GrandEcranSimple from "@/pages/GrandEcranSimple";
 import GrandEcranBasic from "@/pages/GrandEcranBasic";
+import GrandEcranSuper from "@/pages/GrandEcranSuper";
 import ScriptsPage from "@/pages/ScriptsPage";
 import AuthPage from "@/pages/auth-page";
 
@@ -67,6 +68,12 @@ function NavigationBar() {
             >
               BASIC VIEW 📊
             </a>
+            <a 
+              href="/grand-ecran-super" 
+              className="bg-gradient-to-r from-red-600 to-yellow-500 px-3 py-2 rounded-md hover:from-red-700 hover:to-yellow-600 transition-all shadow-lg flex items-center"
+            >
+              SUPER VIEW 💯
+            </a>
           </div>
         ) : (
           <a 
@@ -89,6 +96,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/grand-ecran" component={GrandEcranSimple} />
       <Route path="/grand-ecran-basic" component={() => <GrandEcranBasic />} />
+      <Route path="/grand-ecran-super" component={() => <GrandEcranSuper />} />
       <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>

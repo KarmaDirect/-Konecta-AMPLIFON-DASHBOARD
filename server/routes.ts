@@ -288,6 +288,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Erreur lors de la récupération des agents par statut Digital" });
     }
   });
+  
+  // Route spéciale pour le grand écran qui renvoie toutes les données nécessaires en un seul appel
+  app.get("/api/grand-ecran-data", async (req: Request, res: Response) => {
+    try {
+      const [allAgents, crmAgents, digitalAgents] = await Promise.all([
+        storage.getAgents(),
+        storage.getAgentsByCRMStatus(true),
+        storage.getAgentsByDigitalStatus(true)
+      ]);
+      
+      // Calculer les métriques au niveau du serveur
+      const totalCRMObjectif = crmAgents.reduce((sum, agent) => sum + agent.objectif, 0);
+      const totalDigitalObjectif = digitalAgents.reduce((sum, agent) => sum + agent.objectif, 0);
+      
+      const totalCRMRealises = crmAgents.reduce((sum, agent) => {
+        const currentCRM = agent.currentCRM || 0;
+        const realises = currentCRM <= 0 ? agent.objectif : (agent.objectif - currentCRM);
+        return sum + realises;
+      }, 0);
+      
+      const totalDigitalRealises = digitalAgents.reduce((sum, agent) => {
+        const currentDigital = agent.currentDigital || 0;
+        const realises = currentDigital <= 0 ? agent.objectif : (agent.objectif - currentDigital);
+        return sum + realises;
+      }, 0);
+      
+      const totalCRMBonus = crmAgents.reduce((sum, agent) => {
+        const currentCRM = agent.currentCRM || 0;
+        return sum + (currentCRM < 0 ? Math.abs(currentCRM) : 0);
+      }, 0);
+      
+      const totalDigitalBonus = digitalAgents.reduce((sum, agent) => {
+        const currentDigital = agent.currentDigital || 0;
+        return sum + (currentDigital < 0 ? Math.abs(currentDigital) : 0);
+      }, 0);
+      
+      // Trier les agents par performance
+      const sortedCrmAgents = [...crmAgents].sort((a, b) => {
+        const aRatio = (a.currentCRM || 0) / a.objectif;
+        const bRatio = (b.currentCRM || 0) / b.objectif;
+        return bRatio - aRatio;
+      });
+      
+      const sortedDigitalAgents = [...digitalAgents].sort((a, b) => {
+        const aRatio = (a.currentDigital || 0) / a.objectif;
+        const bRatio = (b.currentDigital || 0) / b.objectif;
+        return bRatio - aRatio;
+      });
+      
+      // Top 5 agents
+      const topCRMAgents = sortedCrmAgents.slice(0, 5);
+      const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
+      
+      res.json({
+        timestamp: new Date().toISOString(),
+        allAgents,
+        crmAgents,
+        digitalAgents,
+        topAgents: {
+          crm: topCRMAgents,
+          digital: topDigitalAgents
+        },
+        stats: {
+          crm: {
+            totalAgents: crmAgents.length,
+            totalObjectif: totalCRMObjectif,
+            totalRealises: totalCRMRealises,
+            totalBonus: totalCRMBonus,
+            restants: totalCRMObjectif - totalCRMRealises,
+            completionRate: totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0
+          },
+          digital: {
+            totalAgents: digitalAgents.length,
+            totalObjectif: totalDigitalObjectif,
+            totalRealises: totalDigitalRealises,
+            totalBonus: totalDigitalBonus,
+            restants: totalDigitalObjectif - totalDigitalRealises,
+            completionRate: totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Erreur pour grand-ecran-data:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des données pour le grand écran" });
+    }
+  });
 
   app.post("/api/agents", async (req: any, res: Response) => {
     try {
