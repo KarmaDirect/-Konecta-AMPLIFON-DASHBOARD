@@ -81,8 +81,8 @@ export default function ScriptsPage() {
           content: scriptToEdit.content,
           campaignName: scriptToEdit.campaignName,
           category: scriptToEdit.category,
-          isActive: scriptToEdit.isActive,
-          priority: scriptToEdit.priority
+          isActive: scriptToEdit.isActive === null ? true : scriptToEdit.isActive,
+          priority: scriptToEdit.priority === null ? 0 : scriptToEdit.priority
         });
       }
     } else {
@@ -517,10 +517,13 @@ export default function ScriptsPage() {
                       <FormControl>
                         <Input 
                           type="number" 
-                          {...field} 
+                          value={field.value?.toString() || "0"}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onBlur={field.onBlur}
                           min={0}
                           max={10}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormDescription>
@@ -540,7 +543,7 @@ export default function ScriptsPage() {
                       <div className="flex items-center gap-2 mt-2">
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value || false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
