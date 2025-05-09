@@ -468,7 +468,11 @@ export default function GrandEcranLocal() {
                 <p className="text-3xl font-bold">{crmAgents.length}</p>
               </div>
               <div className="bg-blue-900/60 rounded-lg p-3">
-                <p className="text-lg">RDV Totaux</p>
+                <p className="text-lg">Objectif Campagne</p>
+                <p className="text-3xl font-bold">{crmCampaignTarget}</p>
+              </div>
+              <div className="bg-blue-900/60 rounded-lg p-3">
+                <p className="text-lg">Objectifs Agents</p>
                 <p className="text-3xl font-bold">{totalCRMObjectif}</p>
               </div>
               <div className="bg-blue-900/60 rounded-lg p-3">
@@ -479,15 +483,40 @@ export default function GrandEcranLocal() {
                 <p className="text-lg">RDV Bonus</p>
                 <p className="text-3xl font-bold">{totalCRMBonus} ⭐</p>
               </div>
+              <div className="bg-blue-900/60 rounded-lg p-3">
+                <p className="text-lg">RDV Restants</p>
+                <p className="text-3xl font-bold">{totalCRMObjectif - totalCRMRealises}</p>
+              </div>
             </div>
-            <Progress value={crmCompletionRate} className="h-6 mb-2" />
-            <div className="flex justify-between text-sm">
-              <span>Progression: {totalCRMRealises}/{totalCRMObjectif}</span>
-              <span>{crmCompletionRate}%</span>
+            
+            {/* Progression par agents */}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-bold">Progression agents:</span>
+                <span className="font-bold">{crmCompletionRate}%</span>
+              </div>
+              <Progress value={crmCompletionRate} className="h-4 mb-2" />
+              <div className="flex justify-between text-sm">
+                <span>RDV: {totalCRMRealises}/{totalCRMObjectif}</span>
+                <span>{totalCRMBonus > 0 ? `+${totalCRMBonus} bonus` : ''}</span>
+              </div>
             </div>
-            <div className="mt-2">
-              <div className="font-bold text-yellow-300 text-center">
-                {totalCRMObjectif - totalCRMRealises} RDV restants
+            
+            {/* Progression par campagne */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-bold">Progression campagne:</span>
+                <span className="font-bold">{Math.min(100, Math.round((totalCRMRealises / crmCampaignTarget) * 100))}%</span>
+              </div>
+              <div className="w-full h-4 bg-blue-900 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-400 to-green-300 rounded-full"
+                  style={{ width: `${Math.min(100, Math.round((totalCRMRealises / crmCampaignTarget) * 100))}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span>RDV: {totalCRMRealises}/{crmCampaignTarget}</span>
+                <span>{crmCampaignTarget - totalCRMRealises} restants</span>
               </div>
             </div>
           </div>
@@ -500,7 +529,11 @@ export default function GrandEcranLocal() {
                 <p className="text-3xl font-bold">{digitalAgents.length}</p>
               </div>
               <div className="bg-purple-900/60 rounded-lg p-3">
-                <p className="text-lg">RDV Totaux</p>
+                <p className="text-lg">Objectif Campagne</p>
+                <p className="text-3xl font-bold">{digitalCampaignTarget}</p>
+              </div>
+              <div className="bg-purple-900/60 rounded-lg p-3">
+                <p className="text-lg">Objectifs Agents</p>
                 <p className="text-3xl font-bold">{totalDigitalObjectif}</p>
               </div>
               <div className="bg-purple-900/60 rounded-lg p-3">
@@ -511,15 +544,40 @@ export default function GrandEcranLocal() {
                 <p className="text-lg">RDV Bonus</p>
                 <p className="text-3xl font-bold">{totalDigitalBonus} ⭐</p>
               </div>
+              <div className="bg-purple-900/60 rounded-lg p-3">
+                <p className="text-lg">RDV Restants</p>
+                <p className="text-3xl font-bold">{totalDigitalObjectif - totalDigitalRealises}</p>
+              </div>
             </div>
-            <Progress value={digitalCompletionRate} className="h-6 mb-2" />
-            <div className="flex justify-between text-sm">
-              <span>Progression: {totalDigitalRealises}/{totalDigitalObjectif}</span>
-              <span>{digitalCompletionRate}%</span>
+            
+            {/* Progression par agents */}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-bold">Progression agents:</span>
+                <span className="font-bold">{digitalCompletionRate}%</span>
+              </div>
+              <Progress value={digitalCompletionRate} className="h-4 mb-2" />
+              <div className="flex justify-between text-sm">
+                <span>RDV: {totalDigitalRealises}/{totalDigitalObjectif}</span>
+                <span>{totalDigitalBonus > 0 ? `+${totalDigitalBonus} bonus` : ''}</span>
+              </div>
             </div>
-            <div className="mt-2">
-              <div className="font-bold text-yellow-300 text-center">
-                {totalDigitalObjectif - totalDigitalRealises} RDV restants
+            
+            {/* Progression par campagne */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-bold">Progression campagne:</span>
+                <span className="font-bold">{Math.min(100, Math.round((totalDigitalRealises / digitalCampaignTarget) * 100))}%</span>
+              </div>
+              <div className="w-full h-4 bg-purple-900 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-400 to-green-300 rounded-full"
+                  style={{ width: `${Math.min(100, Math.round((totalDigitalRealises / digitalCampaignTarget) * 100))}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span>RDV: {totalDigitalRealises}/{digitalCampaignTarget}</span>
+                <span>{digitalCampaignTarget - totalDigitalRealises} restants</span>
               </div>
             </div>
           </div>
