@@ -580,11 +580,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const topCRMAgents = sortedCrmAgents.slice(0, 5);
       const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
       
+      // Objectifs totaux de campagne (ces valeurs sont hardcodées car elles sont définies manuellement)
+      // Ce sont les mêmes valeurs que celles utilisées dans Dashboard.tsx (rdvCRMTotal et rdvDigitalTotal)
+      const crmCampaignTarget = 100; // Objectif total de la campagne CRM
+      const digitalCampaignTarget = 50; // Objectif total de la campagne Digital
+      
       res.json({
         timestamp: new Date().toISOString(),
         allAgents,
         crmAgents,
         digitalAgents,
+        // Ajout des objectifs totaux de campagne à l'API
+        crmTarget: crmCampaignTarget,
+        digitalTarget: digitalCampaignTarget,
         topAgents: {
           crm: topCRMAgents,
           digital: topDigitalAgents
@@ -592,19 +600,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stats: {
           crm: {
             totalAgents: crmAgents.length,
-            totalObjectif: totalCRMObjectif,
+            totalObjectif: totalCRMObjectif, // Somme des objectifs individuels des agents
+            campaignObjectif: crmCampaignTarget, // Objectif de la campagne
             totalRealises: totalCRMRealises,
             totalBonus: totalCRMBonus,
             restants: totalCRMObjectif - totalCRMRealises,
-            completionRate: totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0
+            completionRate: totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0,
+            // Taux par rapport à l'objectif campagne
+            campaignCompletionRate: crmCampaignTarget ? Math.round((totalCRMRealises / crmCampaignTarget) * 100) : 0
           },
           digital: {
             totalAgents: digitalAgents.length,
-            totalObjectif: totalDigitalObjectif,
+            totalObjectif: totalDigitalObjectif, // Somme des objectifs individuels des agents
+            campaignObjectif: digitalCampaignTarget, // Objectif de la campagne
             totalRealises: totalDigitalRealises,
             totalBonus: totalDigitalBonus,
             restants: totalDigitalObjectif - totalDigitalRealises,
-            completionRate: totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0
+            completionRate: totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0,
+            // Taux par rapport à l'objectif campagne
+            campaignCompletionRate: digitalCampaignTarget ? Math.round((totalDigitalRealises / digitalCampaignTarget) * 100) : 0
           }
         }
       });
