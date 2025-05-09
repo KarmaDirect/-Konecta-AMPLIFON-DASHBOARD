@@ -196,7 +196,9 @@ export default function GrandEcranSimple() {
         <div className="flex justify-between items-center mb-4">
           {/* Pas besoin de dupliquer les logos ici car ils sont déjà dans la barre de navigation */}
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold">🎯 Grand Écran - RDV Master</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">🎯 POINT RDV</h1>
+            <p className="text-lg text-gray-300 mb-2">by hatim</p>
+            <p className="text-xl opacity-70">Grand Écran Simple</p>
             <p className="text-lg opacity-70">
               Mise à jour: {lastRefresh.toLocaleTimeString()}
             </p>

@@ -49,7 +49,7 @@ export function GrandEcranGenerator({ crmAgents, digitalAgents }: GrandEcranGene
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand Écran - Mission RDV Master</title>
+  <title>POINT RDV - Grand Écran</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -304,7 +304,9 @@ export function GrandEcranGenerator({ crmAgents, digitalAgents }: GrandEcranGene
   <div class="header">
     <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/e/e7/Konecta_Logo_2021.svg/512px-Konecta_Logo_2021.svg.png" alt="Konecta" class="logo">
     <div class="title">
-      <h1>🎯 Grand Écran - RDV Master</h1>
+      <h1>🎯 POINT RDV</h1>
+      <p style="font-size: 1rem; color: #9ca3af; margin: 0;">by hatim</p>
+      <p style="font-size: 1.2rem; opacity: 0.7; margin: 5px 0;">Grand Écran</p>
       <p>Mise à jour: ${new Date().toLocaleTimeString()}</p>
     </div>
     <img src="/attached_assets/Amplifon-Logo.png" alt="Amplifon" class="logo">
@@ -525,7 +527,7 @@ export function GrandEcranGenerator({ crmAgents, digitalAgents }: GrandEcranGene
       Objectifs journaliers: HOT = 3/h | PROSPECT = 2/h | DIGI = 5/h
     </p>
     <p>
-      Mission RDV Master - Développé pour Konecta & Amplifon - version 2.0
+      POINT RDV - Développé par hatim - version 2.0
     </p>
   </div>
 
