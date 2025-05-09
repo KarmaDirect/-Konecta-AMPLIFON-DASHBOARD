@@ -94,20 +94,38 @@ export default function GrandEcranLocal() {
   const crmAgents = agents.filter(agent => agent.currentCRM !== null);
   const digitalAgents = agents.filter(agent => agent.currentDigital !== null);
   
-  // Trier les agents par performance
+  // Trier les agents par performance (les meilleurs = proches de l'objectif ou avec bonus)
   const sortedCrmAgents = [...crmAgents].sort((a, b) => {
-    const aRatio = (a.currentCRM || 0) / a.objectif;
-    const bRatio = (b.currentCRM || 0) / b.objectif;
-    return bRatio - aRatio;
+    const aCurrent = a.currentCRM || 0;
+    const bCurrent = b.currentCRM || 0;
+    
+    // Si l'un des agents a un bonus (valeur négative), il est prioritaire
+    if (aCurrent < 0 && bCurrent >= 0) return -1;
+    if (bCurrent < 0 && aCurrent >= 0) return 1;
+    
+    // Si les deux ont un bonus, celui qui a le plus grand bonus (valeur plus négative) est prioritaire
+    if (aCurrent < 0 && bCurrent < 0) return aCurrent - bCurrent;
+    
+    // Sinon, on compare la distance à l'objectif (plus proche = meilleur)
+    return aCurrent - bCurrent;
   });
 
   const sortedDigitalAgents = [...digitalAgents].sort((a, b) => {
-    const aRatio = (a.currentDigital || 0) / a.objectif;
-    const bRatio = (b.currentDigital || 0) / b.objectif;
-    return bRatio - aRatio;
+    const aCurrent = a.currentDigital || 0;
+    const bCurrent = b.currentDigital || 0;
+    
+    // Si l'un des agents a un bonus (valeur négative), il est prioritaire
+    if (aCurrent < 0 && bCurrent >= 0) return -1;
+    if (bCurrent < 0 && aCurrent >= 0) return 1;
+    
+    // Si les deux ont un bonus, celui qui a le plus grand bonus (valeur plus négative) est prioritaire
+    if (aCurrent < 0 && bCurrent < 0) return aCurrent - bCurrent;
+    
+    // Sinon, on compare la distance à l'objectif (plus proche = meilleur)
+    return aCurrent - bCurrent;
   });
   
-  // Top 5 agents
+  // Top 5 agents (les meilleures performances)
   const topCRMAgents = sortedCrmAgents.slice(0, 5);
   const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
   

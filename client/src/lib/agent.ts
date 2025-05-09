@@ -22,20 +22,37 @@ export const getTopAgents = (agents: Agent[], type: "currentCRM" | "currentDigit
   return [...agents]
     .filter(a => a[type] !== null)
     .sort((a, b) => {
-      const aRatio = getAgentCompletionRatio(a, type);
-      const bRatio = getAgentCompletionRatio(b, type);
-      return bRatio - aRatio;
+      const aCurrent = a[type] || 0;
+      const bCurrent = b[type] || 0;
+      
+      // Si l'un des agents a un bonus (valeur négative), il est prioritaire
+      if (aCurrent < 0 && bCurrent >= 0) return -1;
+      if (bCurrent < 0 && aCurrent >= 0) return 1;
+      
+      // Si les deux ont un bonus, celui qui a le plus grand bonus (valeur plus négative) est prioritaire
+      if (aCurrent < 0 && bCurrent < 0) return aCurrent - bCurrent;
+      
+      // Sinon, on compare la distance à l'objectif (plus proche = meilleur)
+      return aCurrent - bCurrent;
     })
     .slice(0, limit);
 };
 
 export const getBottomAgents = (agents: Agent[], type: "currentCRM" | "currentDigital", limit = 3): Agent[] => {
-  return [...agents]
-    .filter(a => a[type] !== null)
+  // Filtrer pour ne garder que les agents qui n'ont pas atteint leurs objectifs
+  const agentsWithRemainingRdv = [...agents]
+    .filter(a => a[type] !== null && a[type]! > 0);
+  
+  return agentsWithRemainingRdv
     .sort((a, b) => {
-      const aRatio = getAgentCompletionRatio(a, type);
-      const bRatio = getAgentCompletionRatio(b, type);
-      return aRatio - bRatio;
+      const aCurrent = a[type] || 0;
+      const bCurrent = b[type] || 0;
+      
+      // Plus la valeur est élevée par rapport à l'objectif, plus l'agent est en difficulté
+      const aRatio = aCurrent / a.objectif;
+      const bRatio = bCurrent / b.objectif;
+      
+      return bRatio - aRatio;
     })
     .slice(0, limit);
 };
