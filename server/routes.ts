@@ -60,16 +60,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Map des WebSockets associés à l'ID utilisateur (pour suivi de session)
   const userSockets = new Map<number, Set<WebSocket>>();
   
-  // Fonction pour ajouter un socket à un utilisateur
+  // Fonction pour associer un WebSocket à un utilisateur authentifié
   const addSocketToUser = (userId: number, socket: WebSocket) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    
+    // Marquer le socket comme authentifié
+    (socket as any).isAuthenticated = true;
+    (socket as any).userId = userId;
+    
+    // Stocker le socket pour cet utilisateur
     if (!userSockets.has(userId)) {
       userSockets.set(userId, new Set<WebSocket>());
     }
     userSockets.get(userId)?.add(socket);
-    console.log(`Socket associé à l'utilisateur ${userId}, nombre de sockets: ${userSockets.get(userId)?.size}`);
+    
+    console.log(`WebSocket associé à l'utilisateur ${userId}, nombre de sockets: ${userSockets.get(userId)?.size}`);
   };
   
-  // Fonction pour diffuser un message à tous les clients
   function broadcastMessage(message: any) {
     const messageString = JSON.stringify(message);
     let activeCount = 0;
@@ -161,6 +168,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { password: _, ...userWithoutPassword } = user;
         console.log("Connexion réussie pour l'utilisateur:", user.id, user.username);
         console.log("Session ID:", req.sessionID);
+        
+        // Associer toutes les connexions WebSocket actives de cet utilisateur
+        clients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            addSocketToUser(user.id, client);
+          }
+        });
+        
         res.json(userWithoutPassword);
       });
     } catch (error) {
@@ -245,6 +260,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('message', async (message: string) => {
       try {
         const parsedMessage = JSON.parse(message.toString());
+        
+        // Vérification d'authentification
+        if (parsedMessage.type === 'auth_check') {
+          console.log('Auth check reçu de WebSocket');
+          // Ajouter la logique pour vérifier si l'utilisateur est authentifié
+          
+          // Répondre avec l'état d'authentification actuel
+          ws.send(JSON.stringify({
+            type: 'auth_status',
+            data: { 
+              isAuthenticated: (ws as any).isAuthenticated,
+              userId: (ws as any).userId
+            }
+          }));
+        }
         
         // Traitement des différents types de messages
         if (parsedMessage.type === 'presence') {
