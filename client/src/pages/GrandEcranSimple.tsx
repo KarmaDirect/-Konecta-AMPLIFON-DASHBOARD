@@ -14,28 +14,34 @@ export default function GrandEcranSimple() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const { toast } = useToast();
   
-  // Rafraîchissement automatique des données
+  // Rafraîchissement des données
   const queryClient = useQueryClient();
   
+  // Fonction pour rafraîchir manuellement les données
+  const refreshData = () => {
+    // Rafraîchir les données des agents
+    queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/agents/crm/true"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/agents/digital/true"] });
+    
+    setLastRefresh(new Date());
+    
+    // Afficher un toast pour informer l'utilisateur
+    toast({
+      title: "Données rafraîchies",
+      description: "Les statistiques ont été mises à jour",
+      variant: "default"
+    });
+  };
+  
+  // Rafraîchissement automatique toutes les 30 secondes
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // Rafraîchir les données des agents
-      queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/agents/crm/true"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/agents/digital/true"] });
-      
-      setLastRefresh(new Date());
-      
-      // Afficher un toast pour informer l'utilisateur
-      toast({
-        title: "Données rafraîchies",
-        description: "Les statistiques ont été mises à jour",
-        variant: "default"
-      });
+      refreshData();
     }, 30000); // Toutes les 30 secondes
     
     return () => clearInterval(intervalId);
-  }, [queryClient, toast]);
+  }, []);
   
   // Notifie l'utilisateur quand les données sont chargées
   useEffect(() => {
@@ -180,6 +186,15 @@ export default function GrandEcranSimple() {
             <p className="text-lg opacity-70">
               Mise à jour: {lastRefresh.toLocaleTimeString()}
             </p>
+            <button 
+              onClick={refreshData}
+              className="mt-2 bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-md flex items-center justify-center gap-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.38-4.96M22 12.5a10 10 0 0 1-18.38 4.96"/>
+              </svg>
+              Rafraîchir les données
+            </button>
           </div>
           <div></div>{/* Placeholder pour maintenir la mise en page en 3 colonnes */}
         </div>
