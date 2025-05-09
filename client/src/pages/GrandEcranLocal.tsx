@@ -273,7 +273,7 @@ export default function GrandEcranLocal() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {topCRMAgents.length > 0 ? (
               topCRMAgents.map((agent, i) => (
-                <div key={`crm-${agent.id || i}`}>{renderAgentCard(agent, "CRM")}</div>
+                <div key={`crm-${agent.id || i}-${i}`}>{renderAgentCard(agent, "CRM")}</div>
               ))
             ) : (
               <p className="text-gray-300 italic col-span-2">Aucun agent CRM à afficher.</p>
@@ -289,7 +289,7 @@ export default function GrandEcranLocal() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {topDigitalAgents.length > 0 ? (
               topDigitalAgents.map((agent, i) => (
-                <div key={`digital-${agent.id || i}`}>{renderAgentCard(agent, "Digital")}</div>
+                <div key={`digital-${agent.id || i}-${i}`}>{renderAgentCard(agent, "Digital")}</div>
               ))
             ) : (
               <p className="text-gray-300 italic col-span-2">Aucun agent Digital à afficher.</p>
