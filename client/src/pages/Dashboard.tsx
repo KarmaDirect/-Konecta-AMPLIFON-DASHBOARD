@@ -31,22 +31,40 @@ export default function Dashboard() {
     }
   };
 
-  // Load agents from localStorage on component mount
+  // Utiliser l'API pour récupérer les agents depuis le serveur
   useEffect(() => {
-    const savedAgents = localStorage.getItem('rdvMasterAgents');
-    if (savedAgents) {
-      try {
-        setAgents(JSON.parse(savedAgents));
-      } catch (e) {
-        console.error("Failed to parse saved agents:", e);
-      }
-    }
+    // Récupérer les agents depuis l'API
+    fetch('/api/agents')
+      .then(response => response.json())
+      .then(data => {
+        setAgents(data);
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des agents:", error);
+      });
+    
+    // Écouter les mises à jour via WebSocket
+    wsClient.on<{ agent: Agent }>('agent_updated', (data) => {
+      setAgents(prevAgents => prevAgents.map(agent => 
+        agent.id === data.agent.id ? data.agent : agent
+      ));
+    });
+    
+    wsClient.on<{ agent: Agent }>('agent_created', (data) => {
+      setAgents(prevAgents => [...prevAgents, data.agent]);
+    });
+    
+    wsClient.on<{ agentId: number }>('agent_deleted', (data) => {
+      setAgents(prevAgents => prevAgents.filter(agent => agent.id !== data.agentId));
+    });
+    
+    // Cleanup
+    return () => {
+      wsClient.off('agent_updated');
+      wsClient.off('agent_created');
+      wsClient.off('agent_deleted');
+    };
   }, []);
-
-  // Save agents to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('rdvMasterAgents', JSON.stringify(agents));
-  }, [agents]);
 
   const addAgent = () => {
     if (newAgent.trim()) {
@@ -65,66 +83,111 @@ export default function Dashboard() {
         type: agentType,
         needsHelp: false
       };
-      setAgents([...agents, newEntry]);
+      
+      // Envoyer la requête au serveur pour créer l'agent
+      fetch('/api/agents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newEntry),
+      })
+        .then(response => response.json())
+        .then(createdAgent => {
+          // L'agent est automatiquement ajouté via WebSocket, mais on peut mettre à jour localement aussi
+          setAgents(prevAgents => [...prevAgents, createdAgent]);
+          
+          // Envoyer une notification d'activité pour l'ajout d'agent
+          wsClient.sendActivity(
+            "a ajouté un nouvel agent",
+            createdAgent.name,
+            { 
+              agent: createdAgent.name, 
+              type: agentType,
+              hasCRM: isCRM,
+              hasDigital: isDigital,
+              objectif: Number(newObjective)
+            }
+          );
+        })
+        .catch(error => {
+          console.error("Erreur lors de la création de l'agent:", error);
+          alert("Erreur lors de la création de l'agent. Veuillez réessayer.");
+        });
+      
+      // Réinitialiser les champs du formulaire
       setNewAgent("");
       setNewObjective(20);
       setIsCRM(true);
       setIsDigital(true);
-      
-      // Envoyer une notification d'activité pour l'ajout d'agent
-      wsClient.sendActivity(
-        "a ajouté un nouvel agent",
-        newEntry.name,
-        { 
-          agent: newEntry.name, 
-          type: agentType,
-          hasCRM: isCRM,
-          hasDigital: isDigital,
-          objectif: Number(newObjective)
-        }
-      );
     }
   };
 
   const removeAgent = (index: number) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${agents[index].name} ?`)) {
-      const agent = agents[index];
-      const updated = [...agents];
-      updated.splice(index, 1);
-      setAgents(updated);
-      
-      // Envoyer une notification d'activité pour la suppression d'agent
-      wsClient.sendActivity(
-        "a supprimé un agent",
-        agent.name,
-        { 
-          agent: agent.name,
-          type: agent.type
-        }
-      );
+    const agent = agents[index];
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${agent.name} ?`)) {
+      // Envoyer la requête au serveur pour supprimer l'agent
+      fetch(`/api/agents/${agent.id}`, {
+        method: 'DELETE',
+      })
+        .then(response => {
+          if (response.ok) {
+            // L'agent est automatiquement supprimé via WebSocket, mais on peut mettre à jour localement aussi
+            const updated = [...agents];
+            updated.splice(index, 1);
+            setAgents(updated);
+            
+            // Envoyer une notification d'activité pour la suppression d'agent
+            wsClient.sendActivity(
+              "a supprimé un agent",
+              agent.name,
+              { 
+                agent: agent.name,
+                type: agent.type
+              }
+            );
+          } else {
+            throw new Error('Échec de la suppression');
+          }
+        })
+        .catch(error => {
+          console.error("Erreur lors de la suppression de l'agent:", error);
+          alert("Erreur lors de la suppression de l'agent. Veuillez réessayer.");
+        });
     }
   };
 
   const resetAgents = () => {
     if (window.confirm("Êtes-vous sûr de vouloir réinitialiser tous les compteurs ?")) {
-      setAgents((prev) =>
-        prev.map((a) => ({
-          ...a,
-          currentCRM: a.currentCRM !== null ? a.objectif : null,
-          currentDigital: a.currentDigital !== null ? a.objectif : null
-        }))
-      );
-      setNotified([]);
-      
-      // Envoyer une notification d'activité pour la réinitialisation
-      wsClient.sendActivity(
-        "a réinitialisé tous les compteurs d'objectifs",
-        "",
-        { 
-          action: "reset_all",
-          agentCount: agents.length
-        }
-      );
+      // Appeler l'API pour réinitialiser tous les agents
+      fetch('/api/agents/reset-all', {
+        method: 'POST',
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Échec de la réinitialisation');
+          }
+          return response.json();
+        })
+        .then(resetAgents => {
+          // Les agents sont automatiquement mis à jour via WebSocket, mais on peut mettre à jour localement aussi
+          setAgents(resetAgents);
+          setNotified([]);
+          
+          // Envoyer une notification d'activité pour la réinitialisation
+          wsClient.sendActivity(
+            "a réinitialisé tous les compteurs d'objectifs",
+            "",
+            { 
+              action: "reset_all",
+              agentCount: agents.length
+            }
+          );
+        })
+        .catch(error => {
+          console.error("Erreur lors de la réinitialisation des compteurs:", error);
+          alert("Erreur lors de la réinitialisation des compteurs. Veuillez réessayer.");
+        });
     }
   };
 
@@ -138,121 +201,157 @@ export default function Dashboard() {
       return;
     }
 
-    const rdvPerAgent = Math.floor(rdvTotal / agentCount);
-    const remainder = rdvTotal % agentCount;
-
-    const updated = agents.map((a) => {
-      if (a[type] === null) return a;
-      
-      // Find the index of this agent in the filtered list
-      const filteredIndex = filteredAgents.findIndex(fa => fa === a);
-      const bonus = filteredIndex < remainder ? 1 : 0;
-      const newObjectif = rdvPerAgent + bonus;
-      
-      // Calcul du nombre de RDV déjà pris par cet agent
-      const currentRdvValue = a[type] as number;
-      const originalObjectif = a.objectif;
-      
-      // Si l'agent a déjà des RDV pris (compteur < objectif initial ou négatif)
-      let rdvPris = 0;
-      if (currentRdvValue < 0) {
-        // RDV bonus : tous les RDV pris plus les RDV bonus
-        rdvPris = originalObjectif + Math.abs(currentRdvValue);
-      } else if (currentRdvValue < originalObjectif) {
-        // RDV normaux : différence entre l'objectif et le compteur actuel
-        rdvPris = originalObjectif - currentRdvValue;
-      }
-      
-      // Le nouveau compteur est le nouvel objectif moins les RDV déjà pris
-      // Si l'agent a pris plus que son nouvel objectif, il aura un compteur négatif (bonus)
-      const newCounterValue = Math.max(newObjectif - rdvPris, -Math.abs(rdvPris - newObjectif));
-      
-      return {
-        ...a,
-        objectif: newObjectif,
-        [type]: newCounterValue
-      };
-    });
-
-    setAgents(updated);
-    
-    // Envoyer une notification d'activité pour la répartition des RDV
-    const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
-    wsClient.sendActivity(
-      `a réparti ${rdvTotal} rendez-vous ${typeLabel}`,
-      `entre ${agentCount} agents en préservant les RDV pris`,
-      { 
-        type: typeLabel,
+    // Appeler l'API pour répartir les RDV
+    fetch('/api/agents/dispatch-rdv', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type,
         rdvTotal,
-        agentCount,
-        rdvPerAgent
-      }
-    );
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Échec de la répartition des RDV');
+        }
+        return response.json();
+      })
+      .then(updatedAgents => {
+        // Les agents sont automatiquement mis à jour via WebSocket, mais on peut mettre à jour localement aussi
+        setAgents(updatedAgents);
+        
+        // Calcul pour l'affichage et la notification
+        const rdvPerAgent = Math.floor(rdvTotal / agentCount);
+        
+        // Envoyer une notification d'activité pour la répartition des RDV
+        const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
+        wsClient.sendActivity(
+          `a réparti ${rdvTotal} rendez-vous ${typeLabel}`,
+          `entre ${agentCount} agents en préservant les RDV pris`,
+          { 
+            type: typeLabel,
+            rdvTotal,
+            agentCount,
+            rdvPerAgent
+          }
+        );
+      })
+      .catch(error => {
+        console.error("Erreur lors de la répartition des RDV:", error);
+        alert("Erreur lors de la répartition des RDV. Veuillez réessayer.");
+      });
   };
 
   const updateCount = (index: number, delta: number, type: "currentCRM" | "currentDigital") => {
-    const updated = [...agents];
-    const previous = updated[index][type];
+    const agent = agents[index];
+    const previous = agent[type];
     
     if (previous === null) return;
     
-    updated[index][type] = previous + delta;
-    setAgents(updated);
-
-    // Envoyer une notification d'activité
-    const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
-    const action = delta > 0 ? "a ajouté" : "a retiré";
-    wsClient.sendActivity(
-      `${action} un rendez-vous ${typeLabel}`,
-      updated[index].name,
-      { agent: updated[index].name, delta, type: typeLabel }
-    );
-
-    // L'agent vient juste d'atteindre son objectif (passe de positif à négatif)
-    if (
-      previous >= 0 &&
-      updated[index][type]! < 0
-    ) {      
-      // Envoyer une notification de réussite (sans alerte)
-      wsClient.sendActivity(
-        "a atteint son objectif",
-        `${updated[index].name} (${typeLabel})`,
-        { agent: updated[index].name, type: typeLabel }
-      );
-    }
+    const newValue = previous + delta;
+    const updatedAgent = { ...agent, [type]: newValue };
     
-    // L'agent a pris des RDV supplémentaires (bonus)
-    if (updated[index][type]! < 0) {
-      // Calculer le nombre de RDV bonus
-      const bonusRdv = Math.abs(updated[index][type]!);
-      
-      // Envoyer une notification d'activité pour le bonus (sans alerte)
-      if (delta < 0) {
-        wsClient.sendActivity(
-          "a pris un RDV bonus",
-          `${updated[index].name} (${typeLabel})`,
-          { agent: updated[index].name, type: typeLabel, bonusRdv }
+    // Envoyer la requête au serveur pour mettre à jour l'agent
+    fetch(`/api/agents/${agent.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ [type]: newValue }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Échec de la mise à jour');
+        }
+        return response.json();
+      })
+      .then(updatedAgentData => {
+        // L'agent est automatiquement mis à jour via WebSocket, mais on peut mettre à jour localement aussi
+        setAgents(prevAgents => 
+          prevAgents.map(a => a.id === agent.id ? updatedAgentData : a)
         );
-      }
-    }
+        
+        // Envoyer une notification d'activité
+        const typeLabel = type === "currentCRM" ? "CRM" : "Digital";
+        const action = delta > 0 ? "a ajouté" : "a retiré";
+        wsClient.sendActivity(
+          `${action} un rendez-vous ${typeLabel}`,
+          agent.name,
+          { agent: agent.name, delta, type: typeLabel }
+        );
+        
+        // L'agent vient juste d'atteindre son objectif (passe de positif à négatif)
+        if (previous >= 0 && newValue < 0) {      
+          // Envoyer une notification de réussite (sans alerte)
+          wsClient.sendActivity(
+            "a atteint son objectif",
+            `${agent.name} (${typeLabel})`,
+            { agent: agent.name, type: typeLabel }
+          );
+        }
+        
+        // L'agent a pris des RDV supplémentaires (bonus)
+        if (newValue < 0) {
+          // Calculer le nombre de RDV bonus
+          const bonusRdv = Math.abs(newValue);
+          
+          // Envoyer une notification d'activité pour le bonus (sans alerte)
+          if (delta < 0) {
+            wsClient.sendActivity(
+              "a pris un RDV bonus",
+              `${agent.name} (${typeLabel})`,
+              { agent: agent.name, type: typeLabel, bonusRdv }
+            );
+          }
+        }
+      })
+      .catch(error => {
+        console.error("Erreur lors de la mise à jour de l'agent:", error);
+        alert("Erreur lors de la mise à jour de l'agent. Veuillez réessayer.");
+      });
   };
 
   const updateAgentHours = (index: number, hours: number) => {
-    const updated = [...agents];
-    const previousHours = updated[index].hours;
-    updated[index].hours = hours;
-    setAgents(updated);
+    const agent = agents[index];
+    const previousHours = agent.hours;
     
-    // Envoyer une notification d'activité pour la mise à jour des heures de travail
-    wsClient.sendActivity(
-      "a modifié les heures de travail",
-      updated[index].name,
-      { 
-        agent: updated[index].name,
-        previousHours,
-        newHours: hours
-      }
-    );
+    // Envoyer la requête au serveur pour mettre à jour l'agent
+    fetch(`/api/agents/${agent.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ hours }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Échec de la mise à jour des heures');
+        }
+        return response.json();
+      })
+      .then(updatedAgentData => {
+        // L'agent est automatiquement mis à jour via WebSocket, mais on peut mettre à jour localement aussi
+        setAgents(prevAgents => 
+          prevAgents.map(a => a.id === agent.id ? updatedAgentData : a)
+        );
+        
+        // Envoyer une notification d'activité pour la mise à jour des heures de travail
+        wsClient.sendActivity(
+          "a modifié les heures de travail",
+          agent.name,
+          { 
+            agent: agent.name,
+            previousHours,
+            newHours: hours
+          }
+        );
+      })
+      .catch(error => {
+        console.error("Erreur lors de la mise à jour des heures de travail:", error);
+        alert("Erreur lors de la mise à jour des heures de travail. Veuillez réessayer.");
+      });
   };
 
   const exportToExcel = () => {
