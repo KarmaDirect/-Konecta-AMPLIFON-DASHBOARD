@@ -307,59 +307,53 @@ export default function GrandEcranLocal() {
         </button>
       </div>
 
-      {/* Bandes de félicitations et d'encouragements */}
-      <div className="mt-8 mb-8">
-        {/* Félicitations pour les meilleurs */}
-        <div className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 p-4 rounded-lg shadow-md mb-6">
-          <h3 className="text-3xl text-white font-bold mb-3 text-center">🏆 FÉLICITATIONS AUX TOP PERFORMERS! 🏆</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-xl text-white font-bold mb-2">Équipe CRM</h4>
-              {topCRMAgents.slice(0, 3).map((agent, index) => (
-                <div key={`top-crm-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
-                  <p className="text-xl font-bold">{index+1}. {agent.name}</p>
-                  <p>{getCongratulationMessage(agent, "currentCRM")}</p>
-                </div>
-              ))}
-            </div>
-            <div>
-              <h4 className="text-xl text-white font-bold mb-2">Équipe Digitale</h4>
-              {topDigitalAgents.slice(0, 3).map((agent, index) => (
-                <div key={`top-digital-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
-                  <p className="text-xl font-bold">{index+1}. {agent.name}</p>
-                  <p>{getCongratulationMessage(agent, "currentDigital")}</p>
-                </div>
-              ))}
+      {/* Bande déroulante de motivation */}
+      <div className="mt-8 mb-8 overflow-hidden">
+        <div className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-4 rounded-lg shadow-md relative">
+          <div className="animate-marquee whitespace-nowrap flex items-center">
+            {/* Félicitations pour les 3 meilleurs agents CRM */}
+            {topCRMAgents.slice(0, 3).map((agent, index) => (
+              <div key={`top-crm-${index}`} className="inline-block mx-4 px-6 py-2 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
+                <span className="font-bold mr-2">🏆 CRM #{index+1}:</span>
+                <span className="font-bold text-yellow-300 mr-2">{agent.name}</span>
+                <span className="text-white">{getCongratulationMessage(agent, "currentCRM")}</span>
+              </div>
+            ))}
+            
+            {/* Félicitations pour les 3 meilleurs agents Digital */}
+            {topDigitalAgents.slice(0, 3).map((agent, index) => (
+              <div key={`top-digital-${index}`} className="inline-block mx-4 px-6 py-2 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
+                <span className="font-bold mr-2">🏆 DIGITAL #{index+1}:</span>
+                <span className="font-bold text-purple-300 mr-2">{agent.name}</span>
+                <span className="text-white">{getCongratulationMessage(agent, "currentDigital")}</span>
+              </div>
+            ))}
+            
+            {/* Encouragements pour les 3 agents CRM en retard */}
+            {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
+              <div key={`bottom-crm-${index}`} className="inline-block mx-4 px-6 py-2 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
+                <span className="font-bold mr-2">💪 ALLEZ</span>
+                <span className="font-bold text-blue-300 mr-2">{agent.name}:</span>
+                <span className="text-white">{getEncouragementMessage(agent, "currentCRM")}</span>
+              </div>
+            ))}
+            
+            {/* Encouragements pour les 3 agents Digital en retard */}
+            {getBottomAgents(digitalAgents, "currentDigital").map((agent, index) => (
+              <div key={`bottom-digital-${index}`} className="inline-block mx-4 px-6 py-2 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
+                <span className="font-bold mr-2">💪 ALLEZ</span>
+                <span className="font-bold text-teal-300 mr-2">{agent.name}:</span>
+                <span className="text-white">{getEncouragementMessage(agent, "currentDigital")}</span>
+              </div>
+            ))}
+
+            {/* Message de motivation général */}
+            <div className="inline-block mx-4 px-6 py-2 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
+              <span className="font-bold text-white">🚀 MISSION RDV MASTER:</span>
+              <span className="text-white ml-2">Ensemble, nous pouvons atteindre tous nos objectifs! Chaque rendez-vous compte!</span>
             </div>
           </div>
         </div>
-
-        {/* Encouragements pour ceux qui sont en retard */}
-        {(getBottomAgents(crmAgents, "currentCRM").length > 0 || getBottomAgents(digitalAgents, "currentDigital").length > 0) && (
-          <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-4 rounded-lg shadow-md">
-            <h3 className="text-3xl text-white font-bold mb-3 text-center">💪 ENCORE UN EFFORT! 💪</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-xl text-white font-bold mb-2">Équipe CRM</h4>
-                {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
-                  <div key={`bottom-crm-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
-                    <p className="text-xl font-bold">{agent.name}</p>
-                    <p>{getEncouragementMessage(agent, "currentCRM")}</p>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <h4 className="text-xl text-white font-bold mb-2">Équipe Digitale</h4>
-                {getBottomAgents(digitalAgents, "currentDigital").map((agent, index) => (
-                  <div key={`bottom-digital-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
-                    <p className="text-xl font-bold">{agent.name}</p>
-                    <p>{getEncouragementMessage(agent, "currentDigital")}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <footer className="mt-10 text-center text-gray-400">
