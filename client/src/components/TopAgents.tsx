@@ -13,12 +13,27 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
   const textColor = isCRM ? "text-blue-800" : "text-purple-800";
   const bgColor = isCRM ? "bg-blue-600" : "bg-purple-600";
 
+  // Calcul du nombre total de RDVs pris par tous les agents
+  const totalRdvsPris = agents.reduce((sum, agent) => {
+    if (agent[type] === null) return sum;
+    const rdvsPris = agent.objectif - (agent[type] || 0);
+    return sum + (rdvsPris > 0 ? rdvsPris : 0);
+  }, 0);
+  
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-center">{title}</h2>
       <div className="flex flex-wrap gap-4 justify-center">
         {agents.length === 0 ? (
-          <p className="text-center text-gray-500 italic">Aucun agent disponible</p>
+          <div className="text-center max-w-md px-6 py-4 bg-white shadow-lg rounded-xl border-2 border-gray-200">
+            <p className="text-gray-700 font-medium text-lg mb-2">Objectif en attente</p>
+            <p className="text-gray-600">Allez l'équipe ! C'est le moment de prendre les premiers rendez-vous de la journée ! 💪</p>
+          </div>
+        ) : totalRdvsPris < 4 ? (
+          <div className="text-center max-w-md px-6 py-4 bg-white shadow-lg rounded-xl border-2 border-gray-200">
+            <p className="text-gray-700 font-medium text-lg mb-2">Début de journée</p>
+            <p className="text-gray-600">Seulement {totalRdvsPris} RDV{totalRdvsPris > 1 ? 's' : ''} pris. C'est le moment d'accélérer ! 🚀</p>
+          </div>
         ) : (
           agents.map((agent, i) => {
             const completionRatio = getAgentCompletionRatio(agent, type);
