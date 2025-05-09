@@ -9,12 +9,25 @@ export default function GrandEcranLocal() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [crmCampaignTarget, setCrmCampaignTarget] = useState(100); // Objectif total de la campagne CRM
+  const [digitalCampaignTarget, setDigitalCampaignTarget] = useState(50); // Objectif total de la campagne Digital
   const { toast } = useToast();
   
   // Récupérer les données depuis l'API
   const loadAgents = () => {
     setIsLoading(true);
-    fetch('/api/agents')
+    
+    // Récupérer les agents
+    const fetchAgents = fetch('/api/agents')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        return response.json();
+      });
+    
+    // Récupérer les objectifs de campagne via l'API "grand-ecran-data"
+    const fetchCampaignTargets = fetch('/api/grand-ecran-data')
       .then(response => {
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`);
@@ -22,7 +35,20 @@ export default function GrandEcranLocal() {
         return response.json();
       })
       .then(data => {
-        setAgents(data);
+        // Si l'API renvoie les objectifs de campagne, on les utilise
+        if (data.crmTarget) setCrmCampaignTarget(data.crmTarget);
+        if (data.digitalTarget) setDigitalCampaignTarget(data.digitalTarget);
+        return data;
+      })
+      .catch(err => {
+        console.error("Erreur lors du chargement des objectifs de campagne:", err);
+        // En cas d'erreur, on garde les valeurs par défaut
+      });
+    
+    // Exécuter les deux requêtes en parallèle
+    Promise.all([fetchAgents, fetchCampaignTargets])
+      .then(([agentsData]) => {
+        setAgents(agentsData);
         toast({
           title: "Données rafraîchies",
           description: "Les statistiques ont été mises à jour",
@@ -30,10 +56,10 @@ export default function GrandEcranLocal() {
         });
       })
       .catch(err => {
-        console.error("Erreur lors du chargement des agents:", err);
+        console.error("Erreur lors du chargement des données:", err);
         toast({
           title: "Erreur de chargement",
-          description: "Impossible de charger les données des agents",
+          description: "Impossible de charger les données",
           variant: "destructive"
         });
       })

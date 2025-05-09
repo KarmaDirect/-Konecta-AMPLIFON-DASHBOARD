@@ -460,7 +460,8 @@ export default function Dashboard() {
           <div>
             <h3 className="text-lg font-semibold text-blue-800">📋 CRM - Objectifs Spécifiques</h3>
             <p className="my-1">Total agents : {crmAgents.length}</p>
-            <p className="my-1">Objectif total : {totalCRM}</p>
+            <p className="my-1">Objectif total campagne : {rdvCRMTotal}</p>
+            <p className="my-1">Objectif total agents : {totalCRM}</p>
             <p className="my-1">RDV restants : {totalCRMRestants}</p>
             <p className="text-sm text-green-600 font-medium">
               {totalCRM - totalCRMRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalCRMBonus} bonus</span>
@@ -469,17 +470,18 @@ export default function Dashboard() {
               <div 
                 className="bg-green-600 h-4 rounded-full" 
                 style={{ 
-                  width: `${Math.min(100, totalCRM > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / totalCRM * 100) : 0)}%`
+                  width: `${Math.min(100, rdvCRMTotal > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / rdvCRMTotal * 100) : 0)}%`
                 }}
               >
               </div>
             </div>
-            <p className="text-xs mt-1">Progression globale: {totalCRM > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / totalCRM * 100) : 0}%</p>
+            <p className="text-xs mt-1">Progression campagne: {rdvCRMTotal > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / rdvCRMTotal * 100) : 0}%</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-purple-800">💻 Digital - Objectifs Spécifiques</h3>
             <p className="my-1">Total agents : {digitalAgents.length}</p>
-            <p className="my-1">Objectif total : {totalDigital}</p>
+            <p className="my-1">Objectif total campagne : {rdvDigitalTotal}</p>
+            <p className="my-1">Objectif total agents : {totalDigital}</p>
             <p className="my-1">RDV restants : {totalDigitalRestants}</p>
             <p className="text-sm text-green-600 font-medium">
               {totalDigital - totalDigitalRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalDigitalBonus} bonus</span>
@@ -488,12 +490,12 @@ export default function Dashboard() {
               <div 
                 className="bg-purple-600 h-4 rounded-full" 
                 style={{ 
-                  width: `${Math.min(100, totalDigital > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / totalDigital * 100) : 0)}%`
+                  width: `${Math.min(100, rdvDigitalTotal > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / rdvDigitalTotal * 100) : 0)}%`
                 }}
               >
               </div>
             </div>
-            <p className="text-xs mt-1">Progression globale: {totalDigital > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / totalDigital * 100) : 0}%</p>
+            <p className="text-xs mt-1">Progression campagne: {rdvDigitalTotal > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / rdvDigitalTotal * 100) : 0}%</p>
           </div>
         </div>
 
