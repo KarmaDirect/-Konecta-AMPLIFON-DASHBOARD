@@ -5,7 +5,50 @@ import { Agent, getEmoji } from "@/lib/agent";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface GrandEcranData {
+  timestamp: string;
+  allAgents: Agent[];
+  crmAgents: Agent[];
+  digitalAgents: Agent[];
+  crmTarget: number;
+  digitalTarget: number;
+  topAgents: {
+    crm: Agent[];
+    digital: Agent[];
+  };
+  stats: {
+    crm: {
+      totalAgents: number;
+      totalObjectif: number;
+      campaignObjectif: number;
+      totalRealises: number;
+      totalBonus: number;
+      restants: number;
+      completionRate: number;
+      campaignCompletionRate: number;
+    };
+    digital: {
+      totalAgents: number;
+      totalObjectif: number;
+      campaignObjectif: number;
+      totalRealises: number;
+      totalBonus: number;
+      restants: number;
+      completionRate: number;
+      campaignCompletionRate: number;
+    };
+  };
+}
+
 // Fonction pour récupérer les données via une simple requête fetch
+const fetchGrandEcranData = async (): Promise<GrandEcranData> => {
+  const response = await fetch('/api/grand-ecran-data', { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error(`Erreur HTTP ${response.status}`);
+  }
+  return await response.json();
+};
+
 const fetchAgents = async (url: string): Promise<Agent[]> => {
   const response = await fetch(url, { credentials: 'include' });
   if (!response.ok) {
@@ -15,9 +58,7 @@ const fetchAgents = async (url: string): Promise<Agent[]> => {
 };
 
 export default function GrandEcranSimple() {
-  const [allAgents, setAllAgents] = useState<Agent[]>([]);
-  const [crmAgents, setCrmAgents] = useState<Agent[]>([]);
-  const [digitalAgents, setDigitalAgents] = useState<Agent[]>([]);
+  const [grandEcranData, setGrandEcranData] = useState<GrandEcranData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const { toast } = useToast();
@@ -27,16 +68,10 @@ export default function GrandEcranSimple() {
     try {
       setIsLoading(true);
       
-      // Utiliser directement fetch pour éviter les problèmes avec l'API client
-      const [allAgentsData, crmAgentsData, digitalAgentsData] = await Promise.all([
-        fetchAgents('/api/agents'),
-        fetchAgents('/api/agents/crm/true'),
-        fetchAgents('/api/agents/digital/true')
-      ]);
+      // Utiliser l'endpoint centralisé pour les données du Grand Écran
+      const data = await fetchGrandEcranData();
       
-      setAllAgents(allAgentsData);
-      setCrmAgents(crmAgentsData);
-      setDigitalAgents(digitalAgentsData);
+      setGrandEcranData(data);
       setLastRefresh(new Date());
       
       toast({
@@ -68,57 +103,35 @@ export default function GrandEcranSimple() {
     return () => clearInterval(intervalId);
   }, []);
   
-  // Tri des agents par ratio de performance pour afficher les meilleurs en premier
-  const sortedCrmAgents = [...crmAgents].sort((a, b) => {
-    const aRatio = (a.currentCRM || 0) / a.objectif;
-    const bRatio = (b.currentCRM || 0) / b.objectif;
-    return bRatio - aRatio;
-  });
-
-  const sortedDigitalAgents = [...digitalAgents].sort((a, b) => {
-    const aRatio = (a.currentDigital || 0) / a.objectif;
-    const bRatio = (b.currentDigital || 0) / b.objectif;
-    return bRatio - aRatio;
-  });
-
-  // Prenons les 5 meilleurs agents pour chaque type
-  const topCRMAgents = sortedCrmAgents.slice(0, 5);
-  const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
-
-  // Calcul des totaux
-  const totalCRMObjectif = crmAgents.reduce((sum, agent) => sum + agent.objectif, 0);
-  const totalDigitalObjectif = digitalAgents.reduce((sum, agent) => sum + agent.objectif, 0);
+  // Extraction des données du state
+  const crmAgents = grandEcranData?.crmAgents || [];
+  const digitalAgents = grandEcranData?.digitalAgents || [];
+  const topCRMAgents = grandEcranData?.topAgents?.crm || [];
+  const topDigitalAgents = grandEcranData?.topAgents?.digital || [];
   
-  // Les RDV réalisés sont les RDV qui ne sont plus à prendre (objectif - currentCRM)
-  // Si currentCRM est négatif, cela signifie que l'agent a dépassé son objectif
-  const totalCRMRealises = crmAgents.reduce((sum, agent) => {
-    const currentCRM = agent.currentCRM || 0;
-    // Si currentCRM est négatif, l'agent a réalisé son objectif complet
-    // Si currentCRM est positif, l'agent a réalisé (objectif - currentCRM) RDV
-    const realises = currentCRM <= 0 ? agent.objectif : (agent.objectif - currentCRM);
-    return sum + realises;
-  }, 0);
+  // Stats pour la campagne CRM
+  const crmStats = grandEcranData?.stats.crm || {
+    totalAgents: 0,
+    totalObjectif: 0,
+    campaignObjectif: 0,
+    totalRealises: 0,
+    totalBonus: 0,
+    restants: 0,
+    completionRate: 0,
+    campaignCompletionRate: 0
+  };
   
-  const totalDigitalRealises = digitalAgents.reduce((sum, agent) => {
-    const currentDigital = agent.currentDigital || 0;
-    // Même logique que pour CRM
-    const realises = currentDigital <= 0 ? agent.objectif : (agent.objectif - currentDigital);
-    return sum + realises;
-  }, 0);
-  
-  const crmCompletionRate = totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0;
-  const digitalCompletionRate = totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0;
-  
-  // Les RDV bonus sont les RDV pris en plus de l'objectif (quand currentCRM est négatif)
-  const totalCRMBonus = crmAgents.reduce((sum, agent) => {
-    const currentCRM = agent.currentCRM || 0;
-    return sum + (currentCRM < 0 ? Math.abs(currentCRM) : 0);
-  }, 0);
-  
-  const totalDigitalBonus = digitalAgents.reduce((sum, agent) => {
-    const currentDigital = agent.currentDigital || 0;
-    return sum + (currentDigital < 0 ? Math.abs(currentDigital) : 0);
-  }, 0);
+  // Stats pour la campagne Digital
+  const digitalStats = grandEcranData?.stats.digital || {
+    totalAgents: 0,
+    totalObjectif: 0,
+    campaignObjectif: 0,
+    totalRealises: 0,
+    totalBonus: 0,
+    restants: 0,
+    completionRate: 0,
+    campaignCompletionRate: 0
+  };
 
   // Affichage des cartes d'agents
   const renderAgentCard = (agent: Agent, type: "CRM" | "Digital") => {
@@ -215,36 +228,39 @@ export default function GrandEcranSimple() {
           <div></div>{/* Placeholder pour maintenir la mise en page en 3 colonnes */}
         </div>
         
-        {/* Totaux et progression */}
+        {/* Totaux et progression - Version simplifiée avec une seule barre de progression par campagne */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-blue-800/50 rounded-xl p-4 shadow-lg">
             <h2 className="text-2xl font-bold mb-3">📋 Campagne CRM</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-blue-900/60 rounded-lg p-3">
                 <p className="text-lg">Total Agents</p>
-                <p className="text-3xl font-bold">{crmAgents.length}</p>
+                <p className="text-3xl font-bold">{crmStats.totalAgents}</p>
               </div>
               <div className="bg-blue-900/60 rounded-lg p-3">
-                <p className="text-lg">RDV Totaux</p>
-                <p className="text-3xl font-bold">{totalCRMObjectif}</p>
+                <p className="text-lg">Objectif Campagne</p>
+                <p className="text-3xl font-bold">{crmStats.campaignObjectif}</p>
               </div>
               <div className="bg-blue-900/60 rounded-lg p-3">
                 <p className="text-lg">RDV Réalisés</p>
-                <p className="text-3xl font-bold">{totalCRMRealises}</p>
+                <p className="text-3xl font-bold">{crmStats.totalRealises}</p>
               </div>
               <div className="bg-blue-900/60 rounded-lg p-3">
                 <p className="text-lg">RDV Bonus</p>
-                <p className="text-3xl font-bold">{totalCRMBonus} ⭐</p>
+                <p className="text-3xl font-bold">{crmStats.totalBonus} ⭐</p>
               </div>
             </div>
-            <Progress value={crmCompletionRate} className="h-6 mb-2" />
+            
+            {/* Barre de progression unifiée pour la campagne CRM */}
+            <h3 className="text-lg font-medium mb-1">Progression Globale</h3>
+            <Progress value={crmStats.campaignCompletionRate} className="h-6 mb-2" />
             <div className="flex justify-between text-sm">
-              <span>Progression: {totalCRMRealises}/{totalCRMObjectif}</span>
-              <span>{crmCompletionRate}%</span>
+              <span>RDV Pris: {crmStats.totalRealises}/{crmStats.campaignObjectif}</span>
+              <span>{crmStats.campaignCompletionRate}%</span>
             </div>
             <div className="mt-2">
               <div className="font-bold text-yellow-300 text-center">
-                {totalCRMObjectif - totalCRMRealises} RDV restants
+                {crmStats.restants} RDV restants
               </div>
             </div>
           </div>
@@ -254,29 +270,32 @@ export default function GrandEcranSimple() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-purple-900/60 rounded-lg p-3">
                 <p className="text-lg">Total Agents</p>
-                <p className="text-3xl font-bold">{digitalAgents.length}</p>
+                <p className="text-3xl font-bold">{digitalStats.totalAgents}</p>
               </div>
               <div className="bg-purple-900/60 rounded-lg p-3">
-                <p className="text-lg">RDV Totaux</p>
-                <p className="text-3xl font-bold">{totalDigitalObjectif}</p>
+                <p className="text-lg">Objectif Campagne</p>
+                <p className="text-3xl font-bold">{digitalStats.campaignObjectif}</p>
               </div>
               <div className="bg-purple-900/60 rounded-lg p-3">
                 <p className="text-lg">RDV Réalisés</p>
-                <p className="text-3xl font-bold">{totalDigitalRealises}</p>
+                <p className="text-3xl font-bold">{digitalStats.totalRealises}</p>
               </div>
               <div className="bg-purple-900/60 rounded-lg p-3">
                 <p className="text-lg">RDV Bonus</p>
-                <p className="text-3xl font-bold">{totalDigitalBonus} ⭐</p>
+                <p className="text-3xl font-bold">{digitalStats.totalBonus} ⭐</p>
               </div>
             </div>
-            <Progress value={digitalCompletionRate} className="h-6 mb-2" />
+            
+            {/* Barre de progression unifiée pour la campagne Digitale */}
+            <h3 className="text-lg font-medium mb-1">Progression Globale</h3>
+            <Progress value={digitalStats.campaignCompletionRate} className="h-6 mb-2" />
             <div className="flex justify-between text-sm">
-              <span>Progression: {totalDigitalRealises}/{totalDigitalObjectif}</span>
-              <span>{digitalCompletionRate}%</span>
+              <span>RDV Pris: {digitalStats.totalRealises}/{digitalStats.campaignObjectif}</span>
+              <span>{digitalStats.campaignCompletionRate}%</span>
             </div>
             <div className="mt-2">
               <div className="font-bold text-yellow-300 text-center">
-                {totalDigitalObjectif - totalDigitalRealises} RDV restants
+                {digitalStats.restants} RDV restants
               </div>
             </div>
           </div>
