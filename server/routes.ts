@@ -8,7 +8,8 @@ import {
   insertActivityLogSchema,
   insertCampaignScriptSchema,
   insertAlertThresholdSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertCampaignTargetSchema
 } from "@shared/schema";
 import { storage } from "./storage";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";

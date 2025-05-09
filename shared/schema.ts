@@ -167,6 +167,22 @@ export type InsertAlertThreshold = z.infer<typeof insertAlertThresholdSchema>;
 export type AlertThreshold = typeof alertThresholds.$inferSelect;
 
 // Types d'inférence
+// Table des objectifs de campagne
+export const campaignTargets = pgTable("campaign_targets", {
+  id: serial("id").primaryKey(),
+  crmTarget: integer("crm_target").notNull().default(100),
+  digitalTarget: integer("digital_target").notNull().default(50),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCampaignTargetSchema = createInsertSchema(campaignTargets).pick({
+  crmTarget: true,
+  digitalTarget: true,
+});
+
+export type InsertCampaignTarget = z.infer<typeof insertCampaignTargetSchema>;
+export type CampaignTarget = typeof campaignTargets.$inferSelect;
+
 export type Agent = typeof agents.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;

@@ -166,8 +166,8 @@ export function ActivityFeed() {
       </CardHeader>
       <CardContent>
         {filteredActivities.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
-            Aucune activité récente
+          <div className="text-center py-2 text-muted-foreground text-[10px] italic opacity-50">
+            aucune activité
           </div>
         ) : (
           <div className="space-y-4">

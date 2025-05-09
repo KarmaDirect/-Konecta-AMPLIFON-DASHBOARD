@@ -4,7 +4,8 @@ import {
   achievements, type Achievement, type InsertAchievement,
   activityLogs, type ActivityLog, type InsertActivityLog,
   campaignScripts, type CampaignScript, type InsertCampaignScript,
-  alertThresholds, type AlertThreshold, type InsertAlertThreshold
+  alertThresholds, type AlertThreshold, type InsertAlertThreshold,
+  campaignTargets, type CampaignTarget, type InsertCampaignTarget
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull, desc, not } from "drizzle-orm";
@@ -27,6 +28,10 @@ export interface IStorage {
   deleteAgent(id: number): Promise<boolean>;
   toggleHelpRequest(id: number, needsHelp: boolean): Promise<Agent | undefined>;
   
+  // Objectifs de campagne
+  getCampaignTargets(): Promise<CampaignTarget>;
+  updateCampaignTargets(targets: Partial<InsertCampaignTarget>): Promise<CampaignTarget>;
+
   // Réalisations
   getAchievements(): Promise<Achievement[]>;
   getAchievementsByAgentId(agentId: number): Promise<Achievement[]>;
@@ -58,6 +63,42 @@ export interface IStorage {
 
 // Implémentation de l'interface avec la base de données PostgreSQL via Drizzle
 export class DatabaseStorage implements IStorage {
+  // Objectifs de campagne
+  async getCampaignTargets(): Promise<CampaignTarget> {
+    // Récupérer les objectifs de campagne, ou créer un enregistrement par défaut si aucun n'existe
+    const targets = await db.select().from(campaignTargets);
+    
+    if (targets.length === 0) {
+      // Aucun objectif de campagne trouvé, créer un enregistrement par défaut
+      const [defaultTargets] = await db.insert(campaignTargets)
+        .values({
+          crmTarget: 100,
+          digitalTarget: 50,
+        })
+        .returning();
+      return defaultTargets;
+    }
+    
+    // Retourner le premier enregistrement (il ne devrait y en avoir qu'un)
+    return targets[0];
+  }
+
+  async updateCampaignTargets(targets: Partial<InsertCampaignTarget>): Promise<CampaignTarget> {
+    // Récupérer l'ID des objectifs existants
+    const existingTargets = await this.getCampaignTargets();
+    
+    // Mettre à jour l'enregistrement existant
+    const [updatedTargets] = await db.update(campaignTargets)
+      .set({
+        ...targets,
+        updatedAt: new Date()
+      })
+      .where(eq(campaignTargets.id, existingTargets.id))
+      .returning();
+    
+    return updatedTargets;
+  }
+  
   // Utilisateurs
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
