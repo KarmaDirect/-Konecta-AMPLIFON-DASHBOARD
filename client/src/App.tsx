@@ -57,7 +57,7 @@ function NavigationBar() {
             href="/grand-ecran" 
             className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
           >
-            <span className="hidden md:inline">Ouvrir </span>BIG SCREEN 🖥️
+            BIG SCREEN 🖥️
           </a>
         ) : (
           <a 
