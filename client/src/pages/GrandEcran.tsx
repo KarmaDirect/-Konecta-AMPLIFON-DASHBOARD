@@ -201,14 +201,16 @@ export default function GrandEcran() {
             <div className="mb-3">
               <div className="flex justify-between text-sm mb-1">
                 <span>Progression:</span>
-                <span>{totalCRMCompleted}/{totalCRM} ({crmCompletionRate}%)</span>
+                <span>{totalCRMCompleted}/{totalCRM} ({totalCRM > 0 ? Math.round(((totalCRM - (totalCRM - totalCRMCompleted)) + totalBonusCRM) / totalCRM * 100) : 0}%)</span>
               </div>
               <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-green-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
-                  style={{ width: `${crmCompletionRate}%` }}
+                  className="bg-green-600 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
+                  style={{ 
+                    width: `${Math.min(100, totalCRM > 0 ? Math.round(((totalCRM - (totalCRM - totalCRMCompleted)) + totalBonusCRM) / totalCRM * 100) : 0)}%`
+                  }}
                 >
-                  {crmCompletionRate}%
+                  {totalCRM > 0 ? Math.round(((totalCRM - (totalCRM - totalCRMCompleted)) + totalBonusCRM) / totalCRM * 100) : 0}%
                 </div>
               </div>
             </div>
@@ -242,14 +244,16 @@ export default function GrandEcran() {
             <div className="mb-3">
               <div className="flex justify-between text-sm mb-1">
                 <span>Progression:</span>
-                <span>{totalDigitalCompleted}/{totalDigital} ({digitalCompletionRate}%)</span>
+                <span>{totalDigitalCompleted}/{totalDigital} ({totalDigital > 0 ? Math.round(((totalDigital - (totalDigital - totalDigitalCompleted)) + totalBonusDigital) / totalDigital * 100) : 0}%)</span>
               </div>
               <div className="w-full bg-gray-700 rounded-full h-6 mb-2">
                 <div 
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
-                  style={{ width: `${digitalCompletionRate}%` }}
+                  className="bg-purple-600 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500"
+                  style={{ 
+                    width: `${Math.min(100, totalDigital > 0 ? Math.round(((totalDigital - (totalDigital - totalDigitalCompleted)) + totalBonusDigital) / totalDigital * 100) : 0)}%`
+                  }}
                 >
-                  {digitalCompletionRate}%
+                  {totalDigital > 0 ? Math.round(((totalDigital - (totalDigital - totalDigitalCompleted)) + totalBonusDigital) / totalDigital * 100) : 0}%
                 </div>
               </div>
             </div>

@@ -454,10 +454,13 @@ export default function GrandEcranLocal() {
                 <p className="text-3xl font-bold">{totalCRMBonus} ⭐</p>
               </div>
             </div>
-            <Progress value={crmCompletionRate} className="h-6 mb-2" />
+            <Progress 
+              value={Math.min(100, totalCRMObjectif > 0 ? Math.round((totalCRMRealises + totalCRMBonus) / totalCRMObjectif * 100) : 0)} 
+              className="h-6 mb-2 bg-green-600" 
+            />
             <div className="flex justify-between text-sm">
               <span>Progression: {totalCRMRealises}/{totalCRMObjectif}</span>
-              <span>{crmCompletionRate}%</span>
+              <span>{totalCRMObjectif > 0 ? Math.round((totalCRMRealises + totalCRMBonus) / totalCRMObjectif * 100) : 0}%</span>
             </div>
             <div className="mt-2">
               <div className="font-bold text-yellow-300 text-center">
