@@ -80,18 +80,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   function broadcastMessage(message: any) {
     const messageString = JSON.stringify(message);
-    let activeCount = 0;
     
     // Utiliser un délai minimal pour éviter les envois multiples simultanés 
     // qui peuvent causer des duplications côté client
     setTimeout(() => {
-      clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(messageString);
-          activeCount++;
-        }
-      });
-      console.log(`Message diffusé à ${activeCount} clients WebSocket actifs`);
+      // Filtrer une seule fois pour optimiser les performances
+      const activeClients = [...clients].filter(client => client.readyState === WebSocket.OPEN);
+      if (activeClients.length === 0) return;
+      
+      // Envoi à tous les clients actifs (sans logging pour économiser des ressources)
+      activeClients.forEach(client => client.send(messageString));
     }, 5);
   }
   
@@ -203,26 +201,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/user", async (req: RequestWithSession, res: Response) => {
     try {
-      // Vérifier si l'utilisateur est connecté
-      console.log("Session ID:", req.sessionID);
-      console.log("Session:", req.session);
-      
+      // Vérifier si l'utilisateur est connecté (sans logs excessifs)
       const userId = req.session.userId;
       if (!userId) {
-        console.log("Session trouvée mais pas d'userId");
         return res.status(401).json({ error: "Non authentifié" });
       }
-      
-      console.log("Utilisateur trouvé dans la session, ID:", userId);
       
       // Récupérer l'utilisateur
       const user = await storage.getUser(userId);
       if (!user) {
-        console.log("Utilisateur non trouvé en base de données, ID:", userId);
         return res.status(401).json({ error: "Utilisateur non trouvé" });
       }
-      
-      console.log("Utilisateur récupéré avec succès:", user.id, user.username);
       
       // Retourner l'utilisateur sans le mot de passe
       const { password: _, ...userWithoutPassword } = user;
@@ -246,9 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const recentActivities: any[] = [];
   const maxActivities = 100; // Nombre maximum d'activités à stocker
 
-  // Événements WebSocket
+  // Événements WebSocket avec logs réduits pour économiser des ressources
   wss.on('connection', (ws: WebSocket, req: Request) => {
-    console.log('Nouvelle connexion WebSocket établie');
+    // Pas de log pour chaque connexion pour réduire le bruit
     clients.add(ws);
     
     // Ajouter des propriétés personnalisées à l'objet WebSocket
@@ -272,23 +261,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Vérification d'authentification
         if (parsedMessage.type === 'auth_check') {
-          console.log('Auth check reçu de WebSocket');
+          // Logs retirés pour réduire la consommation de ressources
           
           // Vérifier si l'utilisateur est déjà authentifié sur ce socket
           const isAuthenticated = (ws as any).isAuthenticated;
           const userId = (ws as any).userId;
-          
-          // Si le socket n'est pas encore authentifié, vérifier s'il y a une session valide
-          // en utilisant la cookie envoyée avec la requête WebSocket
-          if (!isAuthenticated && req.headers.cookie) {
-            // Nous utilisons ici un hack pour accéder à la session depuis le WebSocket
-            // La fonction est déjà implémentée dans le système et associe les sockets aux utilisateurs
-            // lors des requêtes /api/user et /api/login
-            
-            // Si le socket n'est pas encore authentifié mais que le client a des cookies,
-            // indiquer au client qu'il devrait vérifier son état d'authentification via HTTP
-            console.log('Le client a des cookies, lui demander de vérifier son authentification via HTTP');
-          }
           
           // Répondre avec l'état d'authentification actuel
           ws.send(JSON.stringify({
@@ -379,9 +356,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Gestionnaire de fermeture
+    // Gestionnaire de fermeture (sans log pour économiser des ressources)
     ws.on('close', () => {
-      console.log('Connexion WebSocket fermée');
       clients.delete(ws);
     });
   });
