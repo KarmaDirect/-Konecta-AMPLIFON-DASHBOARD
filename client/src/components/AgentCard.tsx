@@ -13,6 +13,7 @@ import { Agent } from "@/lib/types";
 import { BadgeCheck, Trash2, Plus, Minus, AlertTriangle, HelpCircle } from "lucide-react";
 import { useToggleHelpRequest } from "@/hooks/use-activity"; 
 import { useAuth } from "@/hooks/use-auth";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AgentCardProps {
   agent: Agent;
@@ -48,10 +49,22 @@ export function AgentCard({
   // Emoji en fonction de l'avancement
   const emoji = getEmoji(currentCount, agent.objectif);
   
+  // État pour suivre les changements de valeur pour l'animation
+  const [prevCount, setPrevCount] = useState(currentCount);
+  const [animationKey, setAnimationKey] = useState(0);
+  
   // Pourcentage d'avancement
   const percentage = currentCount 
-    ? Math.min(Math.round((currentCount / agent.objectif) * 100), 100) 
+    ? Math.min(100 - ((currentCount / agent.objectif) * 100), 100) 
     : 0;
+    
+  // Effet pour détecter les changements de compteur et déclencher une animation
+  useEffect(() => {
+    if (prevCount !== currentCount) {
+      setPrevCount(currentCount);
+      setAnimationKey(prev => prev + 1);
+    }
+  }, [currentCount, prevCount]);
   
   // Handler pour demander de l'aide
   const handleToggleHelp = () => {
@@ -70,89 +83,139 @@ export function AgentCard({
   };
 
   return (
-    <Card className={`relative overflow-hidden ${agent.needsHelp ? 'border-2 border-red-500 help-pulse' : ''}`}>
-      {agent.needsHelp && (
-        <div className="absolute right-2 top-2">
-          <AlertTriangle className="h-5 w-5 text-red-500" />
-        </div>
-      )}
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-bold">{agent.name}</CardTitle>
-          <div className="text-2xl">{emoji}</div>
-        </div>
-        <CardDescription>
-          {currentCount !== null && currentCount < 0 ? (
-            <span className="flex items-center">
-              {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: <span className="font-bold text-green-500 ml-1">Objectif atteint</span> + <span className="text-yellow-500 font-bold ml-1">{Math.abs(currentCount)} bonus</span>
-            </span>
-          ) : (
-            <span>
-              {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: {currentCount || 0} / {agent.objectif}
-            </span>
-          )}
-        </CardDescription>
-        <div className="text-xs mt-1 text-muted-foreground">
-          Type: {agent.type} - Objectif: {rdvPerHour} RDV/h
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
-          {currentCount !== null && currentCount < 0 ? (
-            // Si objectif atteint + RDV bonus, barre verte à 100%
-            <div
-              className="bg-gradient-to-r from-green-500 to-yellow-500 h-2.5 rounded-full"
-              style={{ width: '100%' }}
-            ></div>
-          ) : (
-            // Progression normale
-            <div
-              className={`${percentage >= 100 ? 'bg-green-500' : 'bg-blue-600'} h-2.5 rounded-full`}
-              style={{ width: `${percentage}%` }}
-            ></div>
-          )}
-        </div>
-        
-        <div className="flex justify-center items-center mt-3">
-          <div className="flex items-center space-x-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => onUpdateCount(index, -1, type)}
-              disabled={currentCount === null}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => onUpdateCount(index, 1, type)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      layout
+    >
+      <Card className={`relative overflow-hidden ${agent.needsHelp ? 'border-2 border-red-500 help-pulse' : ''}`}>
+        {agent.needsHelp && (
+          <div className="absolute right-2 top-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
           </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleToggleHelp}
-        >
-          <HelpCircle className="h-4 w-4 mr-1" />
-          {agent.needsHelp ? "Annuler aide" : "Demander aide"}
-        </Button>
-        
-        {isAdmin && (
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={() => onRemove(index)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
         )}
-      </CardFooter>
-    </Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl font-bold">{agent.name}</CardTitle>
+            <div className="text-2xl">{emoji}</div>
+          </div>
+          <CardDescription>
+            {currentCount !== null && currentCount < 0 ? (
+              <span className="flex items-center">
+                {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: <span className="font-bold text-green-500 ml-1">Objectif atteint</span> + <span className="text-yellow-500 font-bold ml-1">{Math.abs(currentCount)} bonus</span>
+              </span>
+            ) : (
+              <span>
+                {type === "currentCRM" ? "RDV CRM" : "RDV Digital"}: {currentCount || 0} / {agent.objectif}
+              </span>
+            )}
+          </CardDescription>
+          <div className="text-xs mt-1 text-muted-foreground">
+            Type: {agent.type} - Objectif: {rdvPerHour} RDV/h
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4 overflow-hidden">
+            <AnimatePresence>
+              {currentCount !== null && currentCount < 0 ? (
+                // Si objectif atteint + RDV bonus, barre verte à 100% avec animation spéciale
+                <motion.div
+                  key={`bonus-${animationKey}`}
+                  initial={{ width: '0%' }}
+                  animate={{ 
+                    width: '100%',
+                    transition: { duration: 0.8, type: "spring", stiffness: 120 }
+                  }}
+                  className="bg-gradient-to-r from-green-500 to-yellow-500 h-2.5 rounded-full"
+                >
+                  {/* Animation de remplissage avec vague */}
+                  <motion.div 
+                    initial={{ x: '-100%' }}
+                    animate={{ 
+                      x: '100%',
+                      transition: { repeat: Infinity, duration: 2, ease: "linear" }
+                    }}
+                    className="w-full h-full bg-gradient-to-r from-transparent via-yellow-300 to-transparent opacity-30"
+                  />
+                </motion.div>
+              ) : (
+                // Progression normale avec animation
+                <motion.div
+                  key={`progress-${animationKey}`}
+                  initial={{ width: prevCount ? Math.min(100 - ((prevCount / agent.objectif) * 100), 100) + "%" : "0%" }}
+                  animate={{ 
+                    width: `${percentage}%`,
+                    transition: { duration: 0.5, type: "spring" }
+                  }}
+                  className={`${percentage >= 100 ? 'bg-green-500' : 'bg-blue-600'} h-2.5 rounded-full relative overflow-hidden`}
+                >
+                  {/* Effet de pulsation si la progression est élevée */}
+                  {percentage >= 75 && (
+                    <motion.div 
+                      animate={{ 
+                        opacity: [0.2, 0.5, 0.2],
+                        scale: [1, 1.1, 1],
+                        transition: { repeat: Infinity, duration: 2 }
+                      }}
+                      className="absolute inset-0 bg-white"
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div className="flex justify-center items-center mt-3">
+            <div className="flex items-center space-x-2">
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateCount(index, -1, type)}
+                  disabled={currentCount === null}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.95 }} 
+                animate={animationKey > 0 ? { scale: [1, 1.2, 1], transition: { duration: 0.3 } } : {}}
+              >
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateCount(index, 1, type)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleToggleHelp}
+          >
+            <HelpCircle className="h-4 w-4 mr-1" />
+            {agent.needsHelp ? "Annuler aide" : "Demander aide"}
+          </Button>
+          
+          {isAdmin && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => onRemove(index)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }

@@ -1,0 +1,89 @@
+/* Animation pour les demandes d'aide */
+@keyframes pulse-border {
+  0% {
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.help-pulse {
+  animation: pulse-border 2s infinite;
+}
+
+/* Animation pour les barres de progression */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 20%, 
+    rgba(255, 255, 255, 0.5) 50%, 
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Animation pour les objectifs bonus */
+@keyframes rainbow-shift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.bonus-rainbow {
+  animation: rainbow-shift 6s infinite linear;
+}
+
+/* Animation pour l'apparition des cartes */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-appear {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Animation pour les changements de valeur */
+@keyframes value-changed {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.value-update {
+  animation: value-changed 0.5s ease;
+}
