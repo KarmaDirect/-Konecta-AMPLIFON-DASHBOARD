@@ -545,7 +545,7 @@ export default function GrandEcranLocal() {
           Objectifs journaliers: HOT = 3/h | PROSPECT = 2/h | DIGI = 5/h
         </p>
         <p>
-          Mission RDV Master - Développé pour Konecta & Amplifon - version 3.0
+          POINT RDV - Développé par hatim - version 3.0
         </p>
       </footer>
     </div>

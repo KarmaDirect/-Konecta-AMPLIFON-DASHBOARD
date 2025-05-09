@@ -201,7 +201,7 @@ export default function AuthPage() {
         <div className="order-1 md:order-2 text-center md:text-left">
           {/* Les logos sont déjà affichés au-dessus du formulaire pour maintenir une interface cohérente */}
           <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
-            Mission RDV Master
+            POINT RDV
           </h1>
           <p className="text-lg text-gray-700 mb-6">
             Plateforme de suivi des performances pour les agents Konecta/Amplifon. 

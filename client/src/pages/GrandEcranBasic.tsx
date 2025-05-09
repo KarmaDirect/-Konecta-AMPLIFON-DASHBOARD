@@ -96,7 +96,9 @@ export default function GrandEcranBasic() {
   return (
     <div className="min-h-screen bg-blue-900 text-white p-4">
       <header className="max-w-5xl mx-auto mb-8">
-        <h1 className="text-4xl font-bold text-center mb-2">Grand Écran - Version Basique</h1>
+        <h1 className="text-4xl font-bold text-center mb-2">POINT RDV</h1>
+        <p className="text-center text-gray-300 mb-2">by hatim</p>
+        <p className="text-xl text-center opacity-70 mb-2">Grand Écran - Version Basique</p>
         <p className="text-center mb-4">Dernière mise à jour: {lastRefresh.toLocaleTimeString()}</p>
         <button 
           onClick={fetchData}
@@ -175,6 +177,15 @@ export default function GrandEcranBasic() {
         >
           Retour au Dashboard
         </button>
+        
+        <footer className="mt-6 text-center text-gray-400">
+          <p className="text-lg font-medium mb-2">
+            Objectifs journaliers: HOT = 3/h | PROSPECT = 2/h | DIGI = 5/h
+          </p>
+          <p>
+            POINT RDV - Développé par hatim - version 1.0
+          </p>
+        </footer>
       </div>
     </div>
   );
