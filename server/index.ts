@@ -31,10 +31,11 @@ app.use(session({
   rolling: true, // Réinitialiser le délai d'expiration à chaque requête
   name: 'konecta.sid', // Nom personnalisé pour éviter les conflits
   cookie: { 
-    secure: false, // Même en prod, on accepte HTTP pour le moment
+    secure: false, // Désactivé car nous n'utilisons pas HTTPS en développement
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 jours
-    sameSite: 'lax'
+    sameSite: 'lax',
+    path: '/'
   }
 }));
 

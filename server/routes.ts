@@ -48,19 +48,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Configuration du serveur WebSocket
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    clientTracking: true 
+  });
   
   // Stockage des connexions WebSocket actives
   const clients = new Set<WebSocket>();
   
+  // Map des WebSockets associés à l'ID utilisateur (pour suivi de session)
+  const userSockets = new Map<number, Set<WebSocket>>();
+  
+  // Fonction pour ajouter un socket à un utilisateur
+  const addSocketToUser = (userId: number, socket: WebSocket) => {
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set<WebSocket>());
+    }
+    userSockets.get(userId)?.add(socket);
+    console.log(`Socket associé à l'utilisateur ${userId}, nombre de sockets: ${userSockets.get(userId)?.size}`);
+  };
+  
   // Fonction pour diffuser un message à tous les clients
   function broadcastMessage(message: any) {
     const messageString = JSON.stringify(message);
-    clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(messageString);
-      }
-    });
+    let activeCount = 0;
+    
+    // Utiliser un délai minimal pour éviter les envois multiples simultanés 
+    // qui peuvent causer des duplications côté client
+    setTimeout(() => {
+      clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(messageString);
+          activeCount++;
+        }
+      });
+      console.log(`Message diffusé à ${activeCount} clients WebSocket actifs`);
+    }, 5);
   }
   
   // Middleware pour permettre la diffusion des modifications d'agents depuis les routes API
