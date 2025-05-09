@@ -4,7 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Agent, getEmoji } from "@/lib/agent";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { fetchAllAgents, fetchCRMAgents, fetchDigitalAgents } from "@/lib/grand-ecran-api";
+
+// Fonction pour récupérer les données via une simple requête fetch
+const fetchAgents = async (url: string): Promise<Agent[]> => {
+  const response = await fetch(url, { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error(`Erreur HTTP ${response.status}`);
+  }
+  return await response.json();
+};
 
 export default function GrandEcranSimple() {
   const [allAgents, setAllAgents] = useState<Agent[]>([]);
@@ -19,11 +27,11 @@ export default function GrandEcranSimple() {
     try {
       setIsLoading(true);
       
-      // Récupérer les données avec notre nouvelle API dédiée
+      // Utiliser directement fetch pour éviter les problèmes avec l'API client
       const [allAgentsData, crmAgentsData, digitalAgentsData] = await Promise.all([
-        fetchAllAgents(),
-        fetchCRMAgents(),
-        fetchDigitalAgents()
+        fetchAgents('/api/agents'),
+        fetchAgents('/api/agents/crm/true'),
+        fetchAgents('/api/agents/digital/true')
       ]);
       
       setAllAgents(allAgentsData);
@@ -31,7 +39,6 @@ export default function GrandEcranSimple() {
       setDigitalAgents(digitalAgentsData);
       setLastRefresh(new Date());
       
-      // Afficher un toast pour informer l'utilisateur
       toast({
         title: "Données rafraîchies",
         description: "Les statistiques ont été mises à jour",
@@ -173,7 +180,7 @@ export default function GrandEcranSimple() {
     window.history.back();
   };
 
-  if (isAllAgentsLoading || isCRMLoading || isDigitalLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white flex flex-col justify-center items-center p-4 md:p-6">
         <Loader2 className="h-12 w-12 animate-spin text-white mb-4" />
