@@ -411,7 +411,9 @@ export default function GrandEcranLocal() {
       <header className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div className="text-center mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold">🎯 Grand Écran - RDV Master</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">🎯 POINT RDV</h1>
+            <p className="text-lg text-gray-300 mb-2">by hatim</p>
+            <p className="text-xl opacity-70">Grand Écran Local</p>
             <p className="text-lg opacity-70">
               Mise à jour: {lastRefresh.toLocaleTimeString()}
             </p>

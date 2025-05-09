@@ -199,7 +199,9 @@ export default function GrandEcranSuper() {
       <header className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div className="text-center mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold">🎯 Grand Écran - RDV Master</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">🎯 POINT RDV</h1>
+            <p className="text-lg text-gray-300 mb-2">by hatim</p>
+            <p className="text-xl opacity-70">Grand Écran v3</p>
             <p className="text-lg opacity-70">
               Mise à jour: {lastRefresh.toLocaleTimeString()}
             </p>
@@ -329,7 +331,7 @@ export default function GrandEcranSuper() {
           Objectifs journaliers: HOT = 3/h | PROSPECT = 2/h | DIGI = 5/h
         </p>
         <p>
-          Mission RDV Master - Développé pour Konecta & Amplifon - version 3.0
+          POINT RDV - Développé par hatim - version 3.0
         </p>
       </footer>
     </div>
