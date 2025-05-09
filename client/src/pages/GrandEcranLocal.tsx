@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Agent, getEmoji } from "@/lib/agent";
+import { Agent, getEmoji, getEncouragementMessage, getCongratulationMessage, getBottomAgents, getTopAgents } from "@/lib/agent";
 import { Loader2, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -305,6 +305,61 @@ export default function GrandEcranLocal() {
         >
           ← Retour au Dashboard
         </button>
+      </div>
+
+      {/* Bandes de félicitations et d'encouragements */}
+      <div className="mt-8 mb-8">
+        {/* Félicitations pour les meilleurs */}
+        <div className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 p-4 rounded-lg shadow-md mb-6">
+          <h3 className="text-3xl text-white font-bold mb-3 text-center">🏆 FÉLICITATIONS AUX TOP PERFORMERS! 🏆</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-xl text-white font-bold mb-2">Équipe CRM</h4>
+              {topCRMAgents.slice(0, 3).map((agent, index) => (
+                <div key={`top-crm-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
+                  <p className="text-xl font-bold">{index+1}. {agent.name}</p>
+                  <p>{getCongratulationMessage(agent, "currentCRM")}</p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h4 className="text-xl text-white font-bold mb-2">Équipe Digitale</h4>
+              {topDigitalAgents.slice(0, 3).map((agent, index) => (
+                <div key={`top-digital-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
+                  <p className="text-xl font-bold">{index+1}. {agent.name}</p>
+                  <p>{getCongratulationMessage(agent, "currentDigital")}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Encouragements pour ceux qui sont en retard */}
+        {(getBottomAgents(crmAgents, "currentCRM").length > 0 || getBottomAgents(digitalAgents, "currentDigital").length > 0) && (
+          <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-4 rounded-lg shadow-md">
+            <h3 className="text-3xl text-white font-bold mb-3 text-center">💪 ENCORE UN EFFORT! 💪</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-xl text-white font-bold mb-2">Équipe CRM</h4>
+                {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
+                  <div key={`bottom-crm-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
+                    <p className="text-xl font-bold">{agent.name}</p>
+                    <p>{getEncouragementMessage(agent, "currentCRM")}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h4 className="text-xl text-white font-bold mb-2">Équipe Digitale</h4>
+                {getBottomAgents(digitalAgents, "currentDigital").map((agent, index) => (
+                  <div key={`bottom-digital-${index}`} className="bg-white bg-opacity-20 text-white rounded-md p-2 mb-2">
+                    <p className="text-xl font-bold">{agent.name}</p>
+                    <p>{getEncouragementMessage(agent, "currentDigital")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <footer className="mt-10 text-center text-gray-400">
