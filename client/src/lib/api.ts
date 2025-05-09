@@ -3,58 +3,53 @@ import { Agent } from "./agent";
 
 // Fonctions de requête API pour les agents
 export const fetchAgents = async (): Promise<Agent[]> => {
-  return await apiRequest("/api/agents");
+  const res = await apiRequest("/api/agents");
+  return await res.json();
 };
 
 export const fetchAgentById = async (id: number): Promise<Agent> => {
-  return await apiRequest(`/api/agents/${id}`);
+  const res = await apiRequest(`/api/agents/${id}`);
+  return await res.json();
 };
 
 export const fetchAgentsByType = async (type: "HOT" | "PROSPECT" | "DIGI"): Promise<Agent[]> => {
-  return await apiRequest(`/api/agents/type/${type}`);
+  const res = await apiRequest(`/api/agents/type/${type}`);
+  return await res.json();
 };
 
 export const fetchCRMAgents = async (): Promise<Agent[]> => {
-  return await apiRequest("/api/agents/crm/true");
+  const res = await apiRequest("/api/agents/crm/true");
+  return await res.json();
 };
 
 export const fetchDigitalAgents = async (): Promise<Agent[]> => {
-  return await apiRequest("/api/agents/digital/true");
+  const res = await apiRequest("/api/agents/digital/true");
+  return await res.json();
 };
 
 export const createAgent = async (agent: Omit<Agent, "id" | "createdAt" | "updatedAt">): Promise<Agent> => {
-  return await apiRequest("/api/agents", {
-    method: "POST",
-    body: JSON.stringify(agent),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await apiRequest("POST", "/api/agents", agent);
+  return await res.json();
 };
 
 export const updateAgent = async (id: number, agent: Partial<Agent>): Promise<Agent> => {
-  return await apiRequest(`/api/agents/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(agent),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await apiRequest("PUT", `/api/agents/${id}`, agent);
+  return await res.json();
 };
 
 export const deleteAgent = async (id: number): Promise<void> => {
-  await apiRequest(`/api/agents/${id}`, {
-    method: "DELETE",
-  });
+  await apiRequest("DELETE", `/api/agents/${id}`);
 };
 
 // Fonctions de requête API pour les réalisations
 export const fetchAchievements = async (): Promise<any[]> => {
-  return await apiRequest("/api/achievements");
+  const res = await apiRequest("/api/achievements");
+  return await res.json();
 };
 
 export const fetchAchievementsByAgentId = async (agentId: number): Promise<any[]> => {
-  return await apiRequest(`/api/achievements/agent/${agentId}`);
+  const res = await apiRequest(`/api/achievements/agent/${agentId}`);
+  return await res.json();
 };
 
 export const createAchievement = async (achievement: {
@@ -63,11 +58,6 @@ export const createAchievement = async (achievement: {
   appointmentsCompleted: number;
   appointmentsTotal: number;
 }): Promise<any> => {
-  return await apiRequest("/api/achievements", {
-    method: "POST",
-    body: JSON.stringify(achievement),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await apiRequest("POST", "/api/achievements", achievement);
+  return await res.json();
 };

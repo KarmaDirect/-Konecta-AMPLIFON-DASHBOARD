@@ -8,19 +8,32 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  method: string,
-  url: string,
+  urlOrMethod: string,
+  urlOrOptions?: string | Record<string, unknown>,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  // Si le second argument est une chaîne, c'est l'URL (ancien modèle)
+  if (typeof urlOrOptions === "string") {
+    const res = await fetch(urlOrOptions, {
+      method: urlOrMethod,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+    await throwIfResNotOk(res);
+    return res;
+  } 
+  // Sinon, le premier argument est l'URL et le second est les options (nouveau modèle)
+  else {
+    const res = await fetch(urlOrMethod, {
+      method: "GET", // Par défaut, GET
+      headers: urlOrOptions ? { "Content-Type": "application/json" } : {},
+      credentials: "include",
+      ...urlOrOptions,
+    });
+    await throwIfResNotOk(res);
+    return res;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

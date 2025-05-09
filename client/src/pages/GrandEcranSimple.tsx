@@ -1,75 +1,82 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAgents, useCRMAgents, useDigitalAgents } from "@/hooks/use-agents";
 import { Agent, getEmoji } from "@/lib/agent";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { fetchAllAgents, fetchCRMAgents, fetchDigitalAgents } from "@/lib/grand-ecran-api";
 
 export default function GrandEcranSimple() {
-  const { data: allAgents = [], isLoading: isAllAgentsLoading } = useAgents();
-  const { data: crmAgentsData = [], isLoading: isCRMLoading } = useCRMAgents();
-  const { data: digitalAgentsData = [], isLoading: isDigitalLoading } = useDigitalAgents();
+  const [allAgents, setAllAgents] = useState<Agent[]>([]);
+  const [crmAgents, setCrmAgents] = useState<Agent[]>([]);
+  const [digitalAgents, setDigitalAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const { toast } = useToast();
   
-  // Rafraîchissement des données
-  const queryClient = useQueryClient();
-  
   // Fonction pour rafraîchir manuellement les données
-  const refreshData = () => {
-    // Rafraîchir les données des agents
-    queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/agents/crm/true"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/agents/digital/true"] });
-    
-    setLastRefresh(new Date());
-    
-    // Afficher un toast pour informer l'utilisateur
-    toast({
-      title: "Données rafraîchies",
-      description: "Les statistiques ont été mises à jour",
-      variant: "default"
-    });
+  const refreshData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Récupérer les données avec notre nouvelle API dédiée
+      const [allAgentsData, crmAgentsData, digitalAgentsData] = await Promise.all([
+        fetchAllAgents(),
+        fetchCRMAgents(),
+        fetchDigitalAgents()
+      ]);
+      
+      setAllAgents(allAgentsData);
+      setCrmAgents(crmAgentsData);
+      setDigitalAgents(digitalAgentsData);
+      setLastRefresh(new Date());
+      
+      // Afficher un toast pour informer l'utilisateur
+      toast({
+        title: "Données rafraîchies",
+        description: "Les statistiques ont été mises à jour",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur de rafraîchissement",
+        description: "Impossible de récupérer les dernières données",
+        variant: "destructive"
+      });
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  // Rafraîchissement automatique toutes les 30 secondes
+  // Chargement initial des données
   useEffect(() => {
+    refreshData();
+    
+    // Rafraîchissement automatique toutes les 30 secondes
     const intervalId = setInterval(() => {
       refreshData();
-    }, 30000); // Toutes les 30 secondes
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);
   
-  // Notifie l'utilisateur quand les données sont chargées
-  useEffect(() => {
-    if (!isAllAgentsLoading && !isCRMLoading && !isDigitalLoading) {
-      toast({
-        title: "Données chargées",
-        description: "Les statistiques sont à jour",
-        variant: "default"
-      });
-    }
-  }, [isAllAgentsLoading, isCRMLoading, isDigitalLoading, toast]);
-  
-  const crmAgents = crmAgentsData
-    .sort((a, b) => {
-      const aRatio = (a.currentCRM || 0) / a.objectif;
-      const bRatio = (b.currentCRM || 0) / b.objectif;
-      return bRatio - aRatio;
-    });
+  // Tri des agents par ratio de performance pour afficher les meilleurs en premier
+  const sortedCrmAgents = [...crmAgents].sort((a, b) => {
+    const aRatio = (a.currentCRM || 0) / a.objectif;
+    const bRatio = (b.currentCRM || 0) / b.objectif;
+    return bRatio - aRatio;
+  });
 
-  const digitalAgents = digitalAgentsData
-    .sort((a, b) => {
-      const aRatio = (a.currentDigital || 0) / a.objectif;
-      const bRatio = (b.currentDigital || 0) / b.objectif;
-      return bRatio - aRatio;
-    });
+  const sortedDigitalAgents = [...digitalAgents].sort((a, b) => {
+    const aRatio = (a.currentDigital || 0) / a.objectif;
+    const bRatio = (b.currentDigital || 0) / b.objectif;
+    return bRatio - aRatio;
+  });
 
-  const topCRMAgents = crmAgents.slice(0, 5);
-  const topDigitalAgents = digitalAgents.slice(0, 5);
+  // Prenons les 5 meilleurs agents pour chaque type
+  const topCRMAgents = sortedCrmAgents.slice(0, 5);
+  const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
 
   // Calcul des totaux
   const totalCRMObjectif = crmAgents.reduce((sum, agent) => sum + agent.objectif, 0);
