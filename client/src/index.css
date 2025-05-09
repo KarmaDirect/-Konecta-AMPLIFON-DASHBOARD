@@ -18,14 +18,14 @@
     transform: translateX(100%);
   }
   100% {
-    transform: translateX(-120%);
+    transform: translateX(-100%);
   }
 }
 
 .animate-marquee {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 100s linear infinite;
+  animation: marquee 40s linear infinite;
 }
 
 .help-pulse {
