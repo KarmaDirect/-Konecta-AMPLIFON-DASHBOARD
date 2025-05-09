@@ -245,9 +245,9 @@ export default function GrandEcranLocal() {
               <div key={`top-crm-${index}`} className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
                 <span className="font-bold mr-2">🏆 {agent.name}</span>
                 <span className="text-white">
-                  {index === 0 ? `${agent.objectif - (agent.currentCRM || 0)} RDV pris! Bravo!` :
-                   index === 1 ? `Excellent travail CRM!` :
-                   `Continue comme ça!`}
+                  {index === 0 ? `${agent.objectif - (agent.currentCRM || 0)} RDV pris! Bravo pour cette excellente performance et votre professionnalisme!` :
+                   index === 1 ? `Excellent travail CRM! Votre engagement fait la différence auprès de nos patients!` :
+                   `Continue comme ça! Tu représentes parfaitement les valeurs d'Amplifon!`}
                 </span>
               </div>
             ))}
@@ -257,14 +257,14 @@ export default function GrandEcranLocal() {
             
             {/* Messages supplémentaires pour CRM */}
             <div className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
-              <span className="text-white font-bold">🔥 L'équipe CRM bat tous les records!</span>
+              <span className="text-white font-bold">🔥 L'équipe CRM bat tous les records! Continuez à maintenir cette qualité de service exceptionnelle!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
-              <span className="text-white font-bold">⭐ Progression constante - Bravo à tous!</span>
+              <span className="text-white font-bold">⭐ Progression constante sur les RDV CRM - Bravo à tous pour votre engagement et votre professionnalisme!</span>
             </div>
             
             {/* Séparateur */}
@@ -275,9 +275,9 @@ export default function GrandEcranLocal() {
               <div key={`top-digital-${index}`} className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
                 <span className="font-bold mr-2">🏆 {agent.name}</span>
                 <span className="text-white">
-                  {index === 0 ? `${agent.objectif - (agent.currentDigital || 0)} RDV Digital! Félicitations!` :
-                   index === 1 ? `Performance impressionnante!` :
-                   `Excellent rythme!`}
+                  {index === 0 ? `${agent.objectif - (agent.currentDigital || 0)} RDV Digital! Félicitations pour ces résultats exceptionnels!` :
+                   index === 1 ? `Performance impressionnante sur le canal digital! Tu maîtrises parfaitement les outils numériques!` :
+                   `Excellent rythme sur les rendez-vous digitaux! Ton expertise technique fait la différence!`}
                 </span>
               </div>
             ))}
@@ -287,14 +287,14 @@ export default function GrandEcranLocal() {
             
             {/* Messages supplémentaires pour Digital */}
             <div className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
-              <span className="text-white font-bold">📱 L'équipe Digitale atteint de nouveaux sommets!</span>
+              <span className="text-white font-bold">📱 L'équipe Digitale atteint de nouveaux sommets! Votre maîtrise des outils numériques transforme chaque contact en opportunité!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
-              <span className="text-white font-bold">💫 Chaque clic compte - Excellence digitale!</span>
+              <span className="text-white font-bold">💫 Chaque clic compte - L'excellence digitale est notre signature! Continuez à construire notre réputation en ligne!</span>
             </div>
             
             {/* Séparateur */}
@@ -305,9 +305,9 @@ export default function GrandEcranLocal() {
               <div key={`bottom-crm-${index}`} className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
                 <span className="font-bold mr-2">💪 {agent.name}:</span>
                 <span className="text-white">
-                  {index === 0 ? `Encore quelques efforts!` :
-                   index === 1 ? `Tu progresses bien!` :
-                   `Nous croyons en toi!`}
+                  {index === 0 ? `Encore quelques efforts pour atteindre ton objectif! Nous savons que tu as le potentiel pour y arriver!` :
+                   index === 1 ? `Tu progresses bien! Rappelle-toi que chaque conversation est une opportunité de faire la différence!` :
+                   `Nous croyons en toi! Ta persévérance sera récompensée par d'excellents résultats!`}
                 </span>
               </div>
             ))}
@@ -317,14 +317,43 @@ export default function GrandEcranLocal() {
             
             {/* Messages supplémentaires d'encouragement */}
             <div className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
-              <span className="text-white font-bold">🌟 La persévérance est la clé du succès!</span>
+              <span className="text-white font-bold">🌟 La persévérance est la clé du succès! Ne lâchez rien, chaque appel vous rapproche de votre objectif!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
-              <span className="text-white font-bold">🔄 Chaque essai nous rapproche du succès!</span>
+              <span className="text-white font-bold">🔄 Chaque essai nous rapproche du succès! Restez motivés et concentrés sur vos objectifs!</span>
+            </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            {/* Messages sur les règles professionnelles */}
+            <div className="inline-block mx-6 px-4 py-1 bg-red-500 bg-opacity-30 rounded-lg border-l-4 border-red-400">
+              <span className="text-white font-bold">⚠️ RAPPEL RGPD: Mentionnez systématiquement la clause RGPD en début d'appel et assurez le consentement du patient!</span>
+            </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-red-500 bg-opacity-30 rounded-lg border-l-4 border-red-400">
+              <span className="text-white font-bold">📵 RAPPEL: L'usage du téléphone personnel est strictement interdit pendant les heures de travail!</span>
+            </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-red-500 bg-opacity-30 rounded-lg border-l-4 border-red-400">
+              <span className="text-white font-bold">📝 RAPPEL SCRIPTS: Respectez scrupuleusement les scripts de vente validés par la direction!</span>
+            </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-red-500 bg-opacity-30 rounded-lg border-l-4 border-red-400">
+              <span className="text-white font-bold">⏱️ RAPPEL APPELS ENTRANTS: La durée maximale ciblée est de 4 minutes par appel! Soyez concis et efficaces!</span>
             </div>
             
             {/* Séparateur */}
@@ -332,21 +361,21 @@ export default function GrandEcranLocal() {
             
             {/* Messages motivationnels généraux */}
             <div className="inline-block mx-6 px-4 py-1 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
-              <span className="text-white font-bold">🚀 MISSION RDV MASTER: Ensemble vers l'excellence!</span>
+              <span className="text-white font-bold">🚀 MISSION RDV MASTER: Ensemble vers l'excellence! Notre force collective nous permet d'atteindre des objectifs ambitieux!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-orange-500 bg-opacity-30 rounded-lg border-l-4 border-orange-400">
-              <span className="text-white font-bold">✨ AMPLIFON: La qualité au cœur de notre mission!</span>
+              <span className="text-white font-bold">✨ AMPLIFON: La qualité au cœur de notre mission! Chaque jour, nous améliorons la vie de nos patients grâce à votre engagement!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
-              <span className="text-white font-bold">📞 KONECTA: Les meilleurs télévendeurs!</span>
+              <span className="text-white font-bold">📞 KONECTA: Les meilleurs télévendeurs sont ici! Votre expertise et votre professionnalisme font notre réputation d'excellence!</span>
             </div>
             
             {/* Séparateur */}
@@ -354,28 +383,28 @@ export default function GrandEcranLocal() {
             
             {/* Citations motivantes */}
             <div className="inline-block mx-6 px-4 py-1 bg-pink-500 bg-opacity-30 rounded-lg border-l-4 border-pink-400">
-              <span className="text-white font-bold">🌈 Le bonheur est la clé du succès!</span>
+              <span className="text-white font-bold">🌈 Le bonheur est la clé du succès! Prenez plaisir dans vos tâches quotidiennes et les résultats suivront naturellement!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-indigo-500 bg-opacity-30 rounded-lg border-l-4 border-indigo-400">
-              <span className="text-white font-bold">🌟 Ensemble, nous relevons tous les défis!</span>
+              <span className="text-white font-bold">🌟 Ensemble, nous relevons tous les défis! La force de notre équipe réside dans notre solidarité et notre détermination!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-lime-500 bg-opacity-30 rounded-lg border-l-4 border-lime-400">
-              <span className="text-white font-bold">🎯 L'excellence est une habitude quotidienne!</span>
+              <span className="text-white font-bold">🎯 L'excellence est une habitude quotidienne! Cultivez chaque jour les petits gestes qui font la différence!</span>
             </div>
             
             {/* Séparateur */}
             <div className="inline-block mx-8 w-4"></div>
             
             <div className="inline-block mx-6 px-4 py-1 bg-cyan-500 bg-opacity-30 rounded-lg border-l-4 border-cyan-400">
-              <span className="text-white font-bold">💎 La qualité est le résultat de l'effort!</span>
+              <span className="text-white font-bold">💎 La qualité est le résultat d'un effort intelligent et constant! Votre travail méthodique construit notre réussite collective!</span>
             </div>
           </div>
         </div>
