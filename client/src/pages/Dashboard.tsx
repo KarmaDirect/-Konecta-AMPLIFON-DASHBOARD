@@ -446,7 +446,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 Mission RDV Master : Suivi Agents CRM & Digitaux</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 POINT RDV</h1>
+        <p className="text-center text-gray-500 mb-4">by hatim</p>
+        <h2 className="text-xl md:text-2xl font-semibold text-center text-blue-700 mb-6">Suivi Agents CRM & Digitaux</h2>
 
         <div className="text-center mb-6">
           <p className="text-gray-600 italic">
@@ -628,7 +630,7 @@ export default function Dashboard() {
 
         <div className="text-center pt-8 pb-4">
           <p className="text-sm text-gray-500">
-            Mission RDV Master - Développé pour Konecta & Amplifon - version 1.0
+            POINT RDV - Développé par hatim - version 1.0
           </p>
         </div>
       </div>

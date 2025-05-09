@@ -61,8 +61,9 @@ function NavigationBar() {
         )}
       </div>
       
-      <div className="font-bold text-xl">
-        Mission RDV Master
+      <div className="flex flex-col items-center">
+        <div className="font-bold text-xl">POINT RDV</div>
+        <div className="text-xs text-gray-300">by hatim</div>
       </div>
       
       <div className="flex items-center space-x-2">

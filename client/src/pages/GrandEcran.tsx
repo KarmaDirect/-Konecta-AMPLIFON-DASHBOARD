@@ -333,7 +333,7 @@ export default function GrandEcran() {
           ⬅️ Retour au Tableau de Bord
         </a>
         <p className="mt-4">
-          Mission RDV Master - Développé pour Konecta & Amplifon - version 1.0
+          POINT RDV - Développé par hatim - version 1.0
         </p>
       </footer>
     </div>
