@@ -7,7 +7,22 @@ import {
   useCampaignScriptsByCategory
 } from '@/hooks/use-campaign-scripts';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, PencilIcon, PlusCircleIcon, SearchIcon, Trash2, XCircleIcon, ZoomInIcon, ZoomOutIcon, MaximizeIcon } from 'lucide-react';
+import { 
+  Loader2, 
+  PencilIcon, 
+  PlusCircleIcon, 
+  SearchIcon, 
+  Trash2, 
+  XCircleIcon, 
+  ZoomInIcon, 
+  ZoomOutIcon, 
+  MaximizeIcon, 
+  FileTextIcon, 
+  ImageIcon, 
+  HelpCircleIcon, 
+  LightbulbIcon,
+  LinkIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,24 +43,33 @@ import { useToast } from '@/hooks/use-toast';
 // Extension du schéma pour la validation du formulaire
 const formSchema = insertCampaignScriptSchema.extend({
   title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
-  content: z.string().min(10, "Le contenu doit contenir au moins 10 caractères"),
+  content: z.string().min(5, "Le contenu doit contenir au moins 5 caractères"),
   campaignName: z.string().min(3, "Le nom de la campagne doit contenir au moins 3 caractères"),
   category: z.string().min(1, "Veuillez sélectionner une catégorie"),
+  resourceType: z.enum(["script", "tip", "objection", "image"]).default("script"),
+  imageUrl: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const scriptCategories = [
-  { id: "hot", name: "HOT", description: "Scripts pour clients existants", color: "blue" },
-  { id: "prospect", name: "PROSPECT", description: "Scripts pour prospects", color: "purple" },
-  { id: "digital", name: "DIGITAL", description: "Scripts pour leads digitaux", color: "green" },
-  { id: "entrant", name: "ENTRANT", description: "Scripts pour appels entrants", color: "orange" },
-  { id: "amplicard", name: "AMPLICARD", description: "Scripts pour Amplicard", color: "yellow" },
-  { id: "cast", name: "CAST AWAY", description: "Scripts pour clients perdus", color: "red" },
-  { id: "custom", name: "PERSONNALISÉS", description: "Vos scripts personnalisés", color: "indigo" }
+const campaignCategories = [
+  { id: "hot", name: "HOT", description: "Ressources pour clients existants", color: "blue" },
+  { id: "prospect", name: "PROSPECT", description: "Ressources pour prospects", color: "purple" },
+  { id: "digital", name: "DIGITAL", description: "Ressources pour leads digitaux", color: "green" },
+  { id: "entrant", name: "ENTRANT", description: "Ressources pour appels entrants", color: "orange" },
+  { id: "amplicard", name: "AMPLICARD", description: "Ressources pour Amplicard", color: "yellow" },
+  { id: "cast", name: "CAST AWAY", description: "Ressources pour clients perdus", color: "red" },
+  { id: "general", name: "GÉNÉRAL", description: "Ressources pour toutes les campagnes", color: "emerald" }
 ];
 
-export default function ScriptsPage() {
+const resourceTypes = [
+  { id: "script", name: "Script", icon: FileTextIcon, description: "Script complet pour un appel" },
+  { id: "tip", name: "Conseil", icon: LightbulbIcon, description: "Conseils et astuces utiles" },
+  { id: "objection", name: "Objection", icon: HelpCircleIcon, description: "Réponses aux objections courantes" },
+  { id: "image", name: "Image", icon: ImageIcon, description: "Image ou graphique explicatif" }
+];
+
+export default function ResourcesPage() {
   const { isAdmin } = useAuth();
   const { data: scripts, isLoading } = useCampaignScripts();
   const [searchQuery, setSearchQuery] = useState('');
@@ -242,13 +266,13 @@ export default function ScriptsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les scripts</SelectItem>
-              {scriptCategories.map((category) => (
+              {campaignCategories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
               ))}
               {categories
-                .filter(cat => !scriptCategories.map(sc => sc.id).includes(cat))
+                .filter(cat => !campaignCategories.map(sc => sc.id).includes(cat))
                 .map((category) => (
                 <SelectItem key={category} value={category}>
                   {category.toUpperCase()}

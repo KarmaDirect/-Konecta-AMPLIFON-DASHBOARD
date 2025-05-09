@@ -110,13 +110,15 @@ export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
-// Table des scripts de campagnes
+// Table des ressources de campagnes (anciennement scripts)
 export const campaignScripts = pgTable("campaign_scripts", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   campaignName: text("campaign_name").notNull(),
   content: text("content").notNull(),
   category: text("category").notNull(), // Catégorie (ex: HOT, PROSPECT, DIGI, etc.)
+  resourceType: text("resource_type").default("script"), // "script", "tip", "objection", "image"
+  imageUrl: text("image_url"), // URL de l'image (si type = image)
   isActive: boolean("is_active").default(true),
   priority: integer("priority").default(0), // Pour l'ordre d'affichage
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -128,6 +130,8 @@ export const insertCampaignScriptSchema = createInsertSchema(campaignScripts).pi
   campaignName: true,
   content: true,
   category: true,
+  resourceType: true,
+  imageUrl: true,
   isActive: true,
   priority: true,
 });

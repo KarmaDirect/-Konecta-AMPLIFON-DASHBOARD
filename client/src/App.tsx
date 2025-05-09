@@ -11,7 +11,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcranLocal from "@/pages/GrandEcranLocal";
-import ScriptsPage from "@/pages/ScriptsPage";
+import ResourcesPage from "@/pages/ResourcesPage";
 import AuthPage from "@/pages/auth-page";
 
 // Composant pour connecter les WebSockets au démarrage
@@ -52,10 +52,10 @@ function NavigationBar() {
               Dashboard
             </a>
             <a 
-              href="/scripts" 
+              href="/resources" 
               className="px-3 py-2 rounded-md hover:bg-blue-800 transition-colors"
             >
-              Scripts
+              Ressources
             </a>
           </>
         )}
@@ -93,7 +93,7 @@ function NavigationBar() {
 function Router() {
   return (
     <Switch>
-      <Route path="/scripts" component={ScriptsPage} />
+      <Route path="/resources" component={ResourcesPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/grand-ecran-local" component={GrandEcranLocal} />
       <Route path="/grand-ecran" component={GrandEcranLocal} />
