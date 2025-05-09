@@ -55,8 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Utilisateur non trouvé");
       }
       
-      // Vérifier le mot de passe (ajout de la vérification de mot de passe)
-      if (!foundUser.password || foundUser.password !== password) {
+      // Vérifier que le mot de passe existe et correspond exactement
+      if (!foundUser.password) {
+        throw new Error("Compte invalide - veuillez vous réinscrire");
+      }
+      
+      if (foundUser.password !== password) {
         throw new Error("Mot de passe incorrect");
       }
       
@@ -114,14 +118,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         users[existingIndex] = {
           username: userData.username,
           name: userData.name,
-          role: userData.role
+          role: userData.role,
+          password: userData.password
         };
       } else {
         // Ajout du nouvel utilisateur
         users.push({
           username: userData.username,
           name: userData.name,
-          role: userData.role
+          role: userData.role,
+          password: userData.password
         });
       }
       
