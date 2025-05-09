@@ -13,6 +13,15 @@ import {
 import { storage } from "./storage";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import session from "express-session";
+
+// Type augmenté pour Request avec session
+interface RequestWithSession extends Request {
+  session: session.Session & {
+    userId?: number;
+  };
+  broadcast?: (message: any) => void;
+}
 
 // Fonctions utilitaires pour le hachage et la vérification de mot de passe
 const scryptAsync = promisify(scrypt);
@@ -58,6 +67,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req: any, res: Response, next: NextFunction) => {
     req.broadcast = broadcastMessage;
     next();
+  });
+  
+  // Routes d'authentification
+  app.post("/api/register", async (req: RequestWithSession, res: Response) => {
+    try {
+      const { username, password, name, role } = req.body;
+      
+      // Vérifier si l'utilisateur existe déjà
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris" });
+      }
+      
+      // Hacher le mot de passe
+      const hashedPassword = await hashPassword(password);
+      
+      // Créer l'utilisateur
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        name,
+        role
+      });
+      
+      // Définir l'utilisateur dans la session
+      req.session.userId = user.id;
+      
+      // Retourner l'utilisateur sans le mot de passe
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error);
+      res.status(500).json({ error: "Erreur lors de l'inscription" });
+    }
+  });
+  
+  app.post("/api/login", async (req: RequestWithSession, res: Response) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Vérifier si l'utilisateur existe
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Nom d'utilisateur ou mot de passe incorrect" });
+      }
+      
+      // Vérifier le mot de passe
+      const isPasswordValid = await verifyPassword(user.password, password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: "Nom d'utilisateur ou mot de passe incorrect" });
+      }
+      
+      // Définir l'utilisateur dans la session
+      req.session.userId = user.id;
+      
+      // Retourner l'utilisateur sans le mot de passe
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
+      res.status(500).json({ error: "Erreur lors de la connexion" });
+    }
+  });
+  
+  app.post("/api/logout", (req: RequestWithSession, res: Response) => {
+    try {
+      // Supprimer la session
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Erreur lors de la déconnexion:", err);
+          return res.status(500).json({ error: "Erreur lors de la déconnexion" });
+        }
+        res.json({ success: true });
+      });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      res.status(500).json({ error: "Erreur lors de la déconnexion" });
+    }
+  });
+  
+  app.get("/api/user", async (req: RequestWithSession, res: Response) => {
+    try {
+      // Vérifier si l'utilisateur est connecté
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+      
+      // Récupérer l'utilisateur
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ error: "Utilisateur non trouvé" });
+      }
+      
+      // Retourner l'utilisateur sans le mot de passe
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'utilisateur:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de l'utilisateur" });
+    }
   });
   
   // Objets pour suivre la présence des utilisateurs et les activités

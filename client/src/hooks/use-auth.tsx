@@ -121,15 +121,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // Supprimer les données locales
-    localStorage.removeItem("currentUser");
-    setCurrentUser(null);
-    
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès.",
-    });
+  const logout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la déconnexion");
+      }
+
+      setCurrentUser(null);
+      
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès.",
+      });
+    } catch (error) {
+      console.error("Erreur de déconnexion:", error);
+      toast({
+        title: "Erreur de déconnexion",
+        description: "Un problème est survenu lors de la déconnexion.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isAdmin = currentUser?.role === "ADMIN";
