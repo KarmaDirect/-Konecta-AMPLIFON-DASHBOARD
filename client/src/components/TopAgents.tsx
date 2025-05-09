@@ -48,7 +48,8 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
     }
     
     setPrevAgents([...agents]);
-  }, [agents, type, prevAgents]);
+    // Remarque: Nous retirons prevAgents des dépendances pour éviter les boucles infinies
+  }, [agents, type]);
 
   // Animer l'entrée des agents
   const cardVariants = {
