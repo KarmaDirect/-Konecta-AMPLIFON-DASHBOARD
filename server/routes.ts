@@ -529,18 +529,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API pour les objectifs de campagne
+  app.get("/api/campaign-targets", async (req: Request, res: Response) => {
+    try {
+      const targets = await storage.getCampaignTargets();
+      res.json(targets);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des objectifs de campagne:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des objectifs de campagne" });
+    }
+  });
+
+  app.put("/api/campaign-targets", async (req: any, res: Response) => {
+    try {
+      const data = insertCampaignTargetSchema.parse(req.body);
+      const updatedTargets = await storage.updateCampaignTargets(data);
+      
+      // Diffuser la mise à jour à tous les clients WebSocket
+      if (req.broadcast) {
+        req.broadcast({
+          type: 'campaign_targets_updated',
+          data: updatedTargets
+        });
+      }
+      
+      res.json(updatedTargets);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des objectifs de campagne:", error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour des objectifs de campagne" });
+    }
+  });
+
   // Route spéciale pour le grand écran qui renvoie toutes les données nécessaires en un seul appel
   app.get("/api/grand-ecran-data", async (req: Request, res: Response) => {
     try {
-      const [allAgents, crmAgents, digitalAgents] = await Promise.all([
+      const [allAgents, crmAgents, digitalAgents, campaignTargets] = await Promise.all([
         storage.getAgents(),
         storage.getAgentsByCRMStatus(true),
-        storage.getAgentsByDigitalStatus(true)
+        storage.getAgentsByDigitalStatus(true),
+        storage.getCampaignTargets()
       ]);
       
-      // Calculer les métriques au niveau du serveur
-      const totalCRMObjectif = crmAgents.reduce((sum, agent) => sum + agent.objectif, 0);
-      const totalDigitalObjectif = digitalAgents.reduce((sum, agent) => sum + agent.objectif, 0);
+      // Utiliser les objectifs de campagne persistants au lieu de calculer à partir des agents
+      const totalCRMObjectif = campaignTargets.crmTarget;
+      const totalDigitalObjectif = campaignTargets.digitalTarget;
       
       const totalCRMRealises = crmAgents.reduce((sum, agent) => {
         const currentCRM = agent.currentCRM || 0;
@@ -581,10 +613,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const topCRMAgents = sortedCrmAgents.slice(0, 5);
       const topDigitalAgents = sortedDigitalAgents.slice(0, 5);
       
-      // Objectifs totaux de campagne (ces valeurs sont hardcodées car elles sont définies manuellement)
-      // Ce sont les mêmes valeurs que celles utilisées dans Dashboard.tsx (rdvCRMTotal et rdvDigitalTotal)
-      const crmCampaignTarget = 100; // Objectif total de la campagne CRM
-      const digitalCampaignTarget = 50; // Objectif total de la campagne Digital
+      // Utiliser les objectifs de campagne depuis la base de données au lieu de valeurs codées en dur
+      const crmCampaignTarget = campaignTargets.crmTarget;
+      const digitalCampaignTarget = campaignTargets.digitalTarget;
       
       res.json({
         timestamp: new Date().toISOString(),
@@ -768,6 +799,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (typeof rdvTotal !== 'number' || rdvTotal <= 0) {
         return res.status(400).json({ error: "Nombre de RDV invalide" });
+      }
+      
+      // Mettre à jour l'objectif de campagne correspondant
+      const campaignTargets = await storage.getCampaignTargets();
+      if (type === 'currentCRM') {
+        await storage.updateCampaignTargets({ crmTarget: rdvTotal });
+      } else {
+        await storage.updateCampaignTargets({ digitalTarget: rdvTotal });
+      }
+      
+      // Diffuser la mise à jour des objectifs de campagne
+      if (req.broadcast) {
+        req.broadcast({
+          type: 'campaign_targets_updated',
+          data: {
+            ...campaignTargets,
+            [type === 'currentCRM' ? 'crmTarget' : 'digitalTarget']: rdvTotal
+          }
+        });
       }
       
       // Récupérer les agents concernés
