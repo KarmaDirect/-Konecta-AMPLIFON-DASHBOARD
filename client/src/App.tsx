@@ -11,6 +11,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GrandEcran from "@/pages/GrandEcran";
 import GrandEcranSimple from "@/pages/GrandEcranSimple";
+import GrandEcranBasic from "@/pages/GrandEcranBasic";
 import ScriptsPage from "@/pages/ScriptsPage";
 import AuthPage from "@/pages/auth-page";
 
@@ -53,12 +54,20 @@ function NavigationBar() {
       
       <div className="flex items-center space-x-2">
         {currentUser ? (
-          <a 
-            href="/grand-ecran" 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
-          >
-            BIG SCREEN 🖥️
-          </a>
+          <div className="flex space-x-2">
+            <a 
+              href="/grand-ecran" 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
+            >
+              BIG SCREEN 🖥️
+            </a>
+            <a 
+              href="/grand-ecran-basic" 
+              className="bg-gradient-to-r from-green-600 to-blue-600 px-3 py-2 rounded-md hover:from-green-700 hover:to-blue-700 transition-all shadow-lg flex items-center"
+            >
+              BASIC VIEW 📊
+            </a>
+          </div>
         ) : (
           <a 
             href="/auth" 
@@ -79,6 +88,7 @@ function Router() {
       <Route path="/scripts" component={ScriptsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/grand-ecran" component={GrandEcranSimple} />
+      <Route path="/grand-ecran-basic" component={() => <GrandEcranBasic />} />
       <Route path="/" component={() => <ProtectedRoute path="/" component={Dashboard} />} />
       <Route component={NotFound} />
     </Switch>
