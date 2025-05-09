@@ -7,7 +7,7 @@ import {
   useCampaignScriptsByCategory
 } from '@/hooks/use-campaign-scripts';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, PencilIcon, PlusCircleIcon, SearchIcon, Trash2, XCircleIcon } from 'lucide-react';
+import { Loader2, PencilIcon, PlusCircleIcon, SearchIcon, Trash2, XCircleIcon, ZoomInIcon, ZoomOutIcon, MaximizeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +52,8 @@ export default function ScriptsPage() {
   const [currentTab, setCurrentTab] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingScript, setEditingScript] = useState<number | null>(null);
+  const [zoomScript, setZoomScript] = useState<number | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(100); // 100% par défaut
   const { toast } = useToast();
 
   const createMutation = useCreateCampaignScript();
@@ -194,7 +196,9 @@ export default function ScriptsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <p className="text-muted-foreground mt-1">
-            Gérez les scripts pour différentes campagnes et catégories
+            {isAdmin 
+              ? "Gérez les scripts pour différentes campagnes et catégories" 
+              : "Consultez les scripts pour différentes campagnes et catégories"}
           </p>
         </div>
         {isAdmin && (
@@ -316,7 +320,7 @@ export default function ScriptsPage() {
                           {script.isActive ? 'Actif' : 'Inactif'}
                         </span>
                       </div>
-                      {isAdmin && (
+                      {isAdmin ? (
                         <div className="flex space-x-2">
                           <Button 
                             size="sm" 
@@ -334,6 +338,20 @@ export default function ScriptsPage() {
                             onClick={() => handleDelete(script.id)}
                           >
                             <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setZoomScript(script.id);
+                              setZoomLevel(100);
+                            }}
+                          >
+                            <MaximizeIcon className="h-4 w-4" />
+                            <span className="ml-1 hidden sm:inline">Zoom</span>
                           </Button>
                         </div>
                       )}
@@ -382,7 +400,7 @@ export default function ScriptsPage() {
                         {script.isActive ? 'Actif' : 'Inactif'}
                       </span>
                     </div>
-                    {isAdmin && (
+                    {isAdmin ? (
                       <div className="flex space-x-2">
                         <Button 
                           size="sm" 
@@ -402,6 +420,20 @@ export default function ScriptsPage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setZoomScript(script.id);
+                            setZoomLevel(100);
+                          }}
+                        >
+                          <MaximizeIcon className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">Zoom</span>
+                        </Button>
+                      </div>
                     )}
                   </CardFooter>
                 </Card>
@@ -412,6 +444,64 @@ export default function ScriptsPage() {
       </Tabs>
 
       {/* Dialogue pour créer/éditer un script */}
+      {/* Dialogue pour zoomer sur un script (pour tous les utilisateurs) */}
+      <Dialog open={zoomScript !== null} onOpenChange={(open) => !open && setZoomScript(null)}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          {zoomScript !== null && scripts && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{scripts.find(s => s.id === zoomScript)?.title}</DialogTitle>
+                <DialogDescription>
+                  Campagne: {scripts.find(s => s.id === zoomScript)?.campaignName} | 
+                  Catégorie: {scripts.find(s => s.id === zoomScript)?.category}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="mt-4 mb-6 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setZoomLevel(Math.max(50, zoomLevel - 10))}
+                    disabled={zoomLevel <= 50}
+                  >
+                    <ZoomOutIcon className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium">{zoomLevel}%</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setZoomLevel(Math.min(200, zoomLevel + 10))}
+                    disabled={zoomLevel >= 200}
+                  >
+                    <ZoomInIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setZoomLevel(100)}
+                >
+                  Réinitialiser
+                </Button>
+              </div>
+              
+              <div 
+                className="p-4 bg-gray-50 rounded-md border overflow-auto max-h-[50vh] whitespace-pre-wrap" 
+                style={{ fontSize: `${zoomLevel}%` }}
+              >
+                {scripts.find(s => s.id === zoomScript)?.content}
+              </div>
+              
+              <DialogFooter>
+                <Button onClick={() => setZoomScript(null)}>Fermer</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialogue pour créer/éditer un script (seulement pour les admins) */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
