@@ -512,14 +512,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/agents", async (req: any, res: Response) => {
     try {
       const validatedData = insertAgentSchema.parse(req.body);
-      const agent = await storage.createAgent(validatedData);
+      console.log("Création d'un nouvel agent avec les données:", validatedData);
       
-      // Notification en temps réel
-      req.broadcast({
+      const agent = await storage.createAgent(validatedData);
+      console.log("Agent créé avec succès, ID:", agent.id);
+      
+      // Notification en temps réel à tous les clients
+      const message = {
         type: 'agent_created',
         data: { agent }
-      });
+      };
       
+      console.log("Diffusion de l'événement 'agent_created' à tous les clients");
+      req.broadcast(message);
+      
+      // Diffuser également via WebSockets directement
+      const serializedMessage = JSON.stringify(message);
+      let clientCount = 0;
+      clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(serializedMessage);
+          clientCount++;
+        }
+      });
+      console.log(`Message 'agent_created' envoyé à ${clientCount} clients WebSocket`);
+      
+      // On répond au client original
       res.status(201).json(agent);
     } catch (error) {
       if (error instanceof z.ZodError) {
