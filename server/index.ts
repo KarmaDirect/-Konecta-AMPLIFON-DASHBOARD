@@ -18,6 +18,26 @@ app.use(express.urlencoded({ extended: false }));
 
 // Configuration du stockage de session
 const PgSession = connectPgSimple(session);
+
+// Créer la table de session si elle n'existe pas
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      );
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    `);
+    console.log("Table de session vérifiée/créée avec succès");
+  } catch (err) {
+    console.error("Erreur lors de la création de la table de session:", err);
+  }
+})();
+
+// Configuration de la session
 app.use(session({
   store: new PgSession({
     pool,
@@ -26,12 +46,12 @@ app.use(session({
     pruneSessionInterval: 60, // Nettoyer les sessions expirées toutes les 60 secondes
   }),
   secret: process.env.SESSION_SECRET || 'konecta-amplifon-secret',
-  resave: false,
-  saveUninitialized: false,
+  resave: true, // Forcer la sauvegarde de session même si non modifiée
+  saveUninitialized: true, // Sauvegarder les sessions non initialisées
   rolling: true, // Réinitialiser le délai d'expiration à chaque requête
   name: 'konecta.sid', // Nom personnalisé pour éviter les conflits
   cookie: { 
-    secure: false, // Désactivé car nous n'utilisons pas HTTPS en développement
+    secure: false, // Désactivé car nous n'utilisons pas HTTPS
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 jours
     sameSite: 'lax',

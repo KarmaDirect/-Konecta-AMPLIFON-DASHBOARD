@@ -40,6 +40,9 @@ export class WebSocketClient {
   private lastActivityTime: number = Date.now();
   private currentStatus: 'online' | 'away' | 'busy' = 'online';
   private currentPage: string = window.location.pathname;
+  
+  // Système de déduplication des événements WebSocket
+  private processedEvents: Map<string, number> = new Map();
 
   constructor() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -118,14 +121,18 @@ export class WebSocketClient {
   connect() {
     if (this.socket?.readyState === WebSocket.OPEN) return;
 
-    this.socket = new WebSocket(this.url);
+    // Annuler toute tentative de reconnexion existante
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
 
+    // Créer une nouvelle connexion WebSocket
+    this.socket = new WebSocket(this.url);
+    
+    // Gestion de l'événement d'ouverture
     this.socket.addEventListener("open", () => {
       console.log("WebSocket connection established");
-      if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-      }
       
       // Démarrer les heartbeats pour la présence
       this.startHeartbeat();
@@ -134,12 +141,45 @@ export class WebSocketClient {
       if (this.currentUser) {
         this.sendPresence();
       }
+      
+      // Vérifier l'état de la session en envoyant un message d'authentification
+      this.send('auth_check', { timestamp: Date.now() });
     });
 
     this.socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(event.data);
         const { type, data } = message;
+        
+        // Déduplication des événements pour les types critiques
+        if (type === 'agent_created' || type === 'agent_updated' || type === 'agent_deleted') {
+          // Créer une clé unique basée sur le type et l'ID
+          const id = type === 'agent_deleted' ? data.agentId : data.agent?.id;
+          if (id) {
+            const eventKey = `${type}_${id}`;
+            const now = Date.now();
+            const lastProcessed = this.processedEvents.get(eventKey);
+            
+            // Si le même événement a été traité dans les 2 dernières secondes, on l'ignore
+            if (lastProcessed && now - lastProcessed < 2000) {
+              console.log('Événement déjà traité récemment, ignoré:', type, id);
+              return;
+            }
+            
+            // Marquer cet événement comme traité
+            this.processedEvents.set(eventKey, now);
+            
+            // Nettoyage périodique des événements anciens
+            if (this.processedEvents.size > 100) {
+              const cutoff = now - 60000; // Supprimer les événements de plus d'une minute
+              for (const [key, timestamp] of this.processedEvents.entries()) {
+                if (timestamp < cutoff) {
+                  this.processedEvents.delete(key);
+                }
+              }
+            }
+          }
+        }
 
         if (this.messageHandlers[type]) {
           this.messageHandlers[type](data);

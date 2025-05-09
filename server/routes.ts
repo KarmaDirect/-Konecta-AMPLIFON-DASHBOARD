@@ -131,24 +131,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       
+      console.log("Tentative de connexion pour:", username);
+      
       // Vérifier si l'utilisateur existe
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log("Utilisateur non trouvé:", username);
         return res.status(401).json({ error: "Nom d'utilisateur ou mot de passe incorrect" });
       }
       
       // Vérifier le mot de passe
       const isPasswordValid = await verifyPassword(user.password, password);
       if (!isPasswordValid) {
+        console.log("Mot de passe invalide pour:", username);
         return res.status(401).json({ error: "Nom d'utilisateur ou mot de passe incorrect" });
       }
       
-      // Définir l'utilisateur dans la session
+      // Définir l'utilisateur dans la session et sauvegarder explicitement
       req.session.userId = user.id;
       
-      // Retourner l'utilisateur sans le mot de passe
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Enregistrer la session de manière explicite
+      req.session.save((err) => {
+        if (err) {
+          console.error("Erreur lors de la sauvegarde de la session:", err);
+          return res.status(500).json({ error: "Erreur lors de la connexion" });
+        }
+        
+        // Retourner l'utilisateur sans le mot de passe
+        const { password: _, ...userWithoutPassword } = user;
+        console.log("Connexion réussie pour l'utilisateur:", user.id, user.username);
+        console.log("Session ID:", req.sessionID);
+        res.json(userWithoutPassword);
+      });
     } catch (error) {
       console.error("Erreur lors de la connexion:", error);
       res.status(500).json({ error: "Erreur lors de la connexion" });
@@ -174,16 +188,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user", async (req: RequestWithSession, res: Response) => {
     try {
       // Vérifier si l'utilisateur est connecté
+      console.log("Session ID:", req.sessionID);
+      console.log("Session:", req.session);
+      
       const userId = req.session.userId;
       if (!userId) {
+        console.log("Session trouvée mais pas d'userId");
         return res.status(401).json({ error: "Non authentifié" });
       }
+      
+      console.log("Utilisateur trouvé dans la session, ID:", userId);
       
       // Récupérer l'utilisateur
       const user = await storage.getUser(userId);
       if (!user) {
+        console.log("Utilisateur non trouvé en base de données, ID:", userId);
         return res.status(401).json({ error: "Utilisateur non trouvé" });
       }
+      
+      console.log("Utilisateur récupéré avec succès:", user.id, user.username);
       
       // Retourner l'utilisateur sans le mot de passe
       const { password: _, ...userWithoutPassword } = user;
@@ -200,9 +223,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const maxActivities = 100; // Nombre maximum d'activités à stocker
 
   // Événements WebSocket
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on('connection', (ws: WebSocket, req: Request) => {
     console.log('Nouvelle connexion WebSocket établie');
     clients.add(ws);
+    
+    // Ajouter des propriétés personnalisées à l'objet WebSocket
+    (ws as any).isAuthenticated = false;
+    (ws as any).userId = null;
     
     // Envoyer les agents actuels au nouveau client
     storage.getAgents().then(agents => {
