@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Agent, getEmoji, getAgentCompletionRatio, getTotalRdvCompleted, getTopAgents, getBottomAgents, getEncouragementMessage, getCongratulationMessage } from "@/lib/agent";
+import { Agent, getEmoji, getAgentCompletionRatio, getTotalRdvCompleted, getTopAgents, getBottomAgents, getEncouragementMessage, getCongratulationMessage, getAverageCompletionRate } from "@/lib/agent";
 
 export default function GrandEcran() {
   const [agents, setAgents] = useState<Agent[]>([]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Agent, getEmoji, getEncouragementMessage, getCongratulationMessage, getBottomAgents, getTopAgents } from "@/lib/agent";
+import { Agent, getEmoji, getEncouragementMessage, getCongratulationMessage, getBottomAgents, getTopAgents, getAverageCompletionRate } from "@/lib/agent";
 import { Loader2, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -143,8 +143,13 @@ export default function GrandEcranLocal() {
     return sum + realises;
   }, 0);
   
-  const crmCompletionRate = totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0;
-  const digitalCompletionRate = totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0;
+  // Calcul du taux d'accomplissement basé sur la moyenne des ratios de complétion des agents
+  const crmCompletionRate = getAverageCompletionRate(crmAgents, "currentCRM");
+  const digitalCompletionRate = getAverageCompletionRate(digitalAgents, "currentDigital");
+  
+  // Calcul alternatif basé sur le total des RDV complétés (ancienne méthode)
+  const crmTotalCompletionRate = totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0;
+  const digitalTotalCompletionRate = totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0;
   
   const totalCRMBonus = crmAgents.reduce((sum, agent) => {
     const currentCRM = agent.currentCRM || 0;
