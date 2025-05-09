@@ -225,6 +225,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Retourner l'utilisateur sans le mot de passe
       const { password: _, ...userWithoutPassword } = user;
+      
+      // Associer toutes les connexions WebSocket actives à cet utilisateur
+      clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          addSocketToUser(user.id, client);
+        }
+      });
+      
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Erreur lors de la récupération de l'utilisateur:", error);
@@ -264,14 +272,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Vérification d'authentification
         if (parsedMessage.type === 'auth_check') {
           console.log('Auth check reçu de WebSocket');
-          // Ajouter la logique pour vérifier si l'utilisateur est authentifié
+          
+          // Vérifier si l'utilisateur est déjà authentifié sur ce socket
+          const isAuthenticated = (ws as any).isAuthenticated;
+          const userId = (ws as any).userId;
+          
+          // Si le socket n'est pas encore authentifié, vérifier s'il y a une session valide
+          // en utilisant la cookie envoyée avec la requête WebSocket
+          if (!isAuthenticated && req.headers.cookie) {
+            // Nous utilisons ici un hack pour accéder à la session depuis le WebSocket
+            // La fonction est déjà implémentée dans le système et associe les sockets aux utilisateurs
+            // lors des requêtes /api/user et /api/login
+            
+            // Si le socket n'est pas encore authentifié mais que le client a des cookies,
+            // indiquer au client qu'il devrait vérifier son état d'authentification via HTTP
+            console.log('Le client a des cookies, lui demander de vérifier son authentification via HTTP');
+          }
           
           // Répondre avec l'état d'authentification actuel
           ws.send(JSON.stringify({
             type: 'auth_status',
             data: { 
-              isAuthenticated: (ws as any).isAuthenticated,
-              userId: (ws as any).userId
+              isAuthenticated: isAuthenticated,
+              userId: userId,
+              hasSessionCookies: !!req.headers.cookie
             }
           }));
         }

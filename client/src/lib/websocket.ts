@@ -107,7 +107,13 @@ export class WebSocketClient {
         this.currentStatus = 'away';
       }
       
-      this.sendPresence();
+      // Envoyer un signal de présence si l'utilisateur est connecté
+      if (this.currentUser) {
+        this.sendPresence();
+      } 
+      
+      // Vérifier périodiquement l'état d'authentification
+      this.send('auth_check', { timestamp: Date.now() });
     }, 30000); // 30 secondes
   }
 
@@ -171,16 +177,64 @@ export class WebSocketClient {
             
             // Nettoyage périodique des événements anciens
             if (this.processedEvents.size > 100) {
+              const keysToDelete: string[] = [];
               const cutoff = now - 60000; // Supprimer les événements de plus d'une minute
-              for (const [key, timestamp] of this.processedEvents.entries()) {
+              
+              // Identifier les clés à supprimer
+              this.processedEvents.forEach((timestamp, key) => {
                 if (timestamp < cutoff) {
-                  this.processedEvents.delete(key);
+                  keysToDelete.push(key);
                 }
-              }
+              });
+              
+              // Supprimer les clés
+              keysToDelete.forEach(key => {
+                this.processedEvents.delete(key);
+              });
             }
           }
         }
 
+        // Gestion spéciale pour les messages d'authentification
+        if (type === 'auth_status') {
+          console.log('Auth status reçu:', data);
+          
+          // Mise à jour de l'état d'authentification
+          if (data.isAuthenticated && data.userId && !this.currentUser) {
+            // Si le serveur indique que nous sommes authentifiés mais que nous n'avons pas d'utilisateur,
+            // essayer de récupérer les informations utilisateur
+            fetch('/api/user', { credentials: 'include' })
+              .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Failed to fetch user');
+              })
+              .then(user => {
+                this.setCurrentUser(user);
+              })
+              .catch(err => {
+                console.log('Erreur lors de la récupération de l\'utilisateur malgré l\'authentification:', err);
+              });
+          }
+          // Si le serveur indique que nous avons des cookies de session mais que nous ne sommes pas authentifiés,
+          // essayer de vérifier l'état d'authentification via une requête HTTP
+          else if (data.hasSessionCookies && !data.isAuthenticated && !this.currentUser) {
+            console.log('Cookies de session détectés, vérification de l\'authentification via HTTP');
+            fetch('/api/user', { credentials: 'include' })
+              .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Not authenticated');
+              })
+              .then(user => {
+                console.log('Utilisateur récupéré via HTTP:', user);
+                this.setCurrentUser(user);
+              })
+              .catch(err => {
+                console.log('Pas d\'authentification active:', err);
+              });
+          }
+        }
+        
+        // Appeler le gestionnaire correspondant au type de message
         if (this.messageHandlers[type]) {
           this.messageHandlers[type](data);
         }

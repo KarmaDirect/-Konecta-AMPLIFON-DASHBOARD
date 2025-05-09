@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -15,7 +16,21 @@ import AuthPage from "@/pages/auth-page";
 
 // Composant pour connecter les WebSockets au démarrage
 function WebSocketConnector() {
+  const { currentUser } = useAuth();
+  
+  // Utiliser le hook pour s'abonner aux événements en temps réel
   useRealtimeAgents();
+  
+  // Effet pour connecter le WebSocket avec l'utilisateur connecté
+  useEffect(() => {
+    import('./lib/websocket').then(({ wsClient }) => {
+      if (currentUser) {
+        console.log('Mise à jour de l\'utilisateur dans WebSocketClient:', currentUser);
+        wsClient.setCurrentUser(currentUser);
+      }
+    });
+  }, [currentUser]);
+  
   return null;
 }
 
