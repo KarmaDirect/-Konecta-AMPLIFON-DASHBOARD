@@ -23,9 +23,9 @@
 }
 
 .animate-marquee {
-  display: inline-block;
+  display: flex;
   white-space: nowrap;
-  animation: marquee 40s linear infinite;
+  animation: marquee 80s linear infinite;
 }
 
 .help-pulse {

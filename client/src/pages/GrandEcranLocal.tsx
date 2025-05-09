@@ -238,7 +238,7 @@ export default function GrandEcranLocal() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white p-4 md:p-6">
       {/* Bande déroulante de motivation en haut */}
       <div className="mb-6 mt-2 overflow-hidden sticky top-0 z-10">
-        <div className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-3 rounded-lg shadow-md relative">
+        <div className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-3 rounded-lg shadow-md relative overflow-hidden">
           <div className="animate-marquee whitespace-nowrap flex items-center">
             {/* Messages de félicitations variés pour CRM */}
             {topCRMAgents.slice(0, 3).map((agent, index) => (
