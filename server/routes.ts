@@ -7,9 +7,33 @@ import {
   insertAchievementSchema, 
   insertActivityLogSchema,
   insertCampaignScriptSchema,
-  insertAlertThresholdSchema
+  insertAlertThresholdSchema,
+  insertUserSchema
 } from "@shared/schema";
 import { storage } from "./storage";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+// Fonctions utilitaires pour le hachage et la vérification de mot de passe
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function verifyPassword(storedPassword: string, suppliedPassword: string): Promise<boolean> {
+  try {
+    const [hashedPassword, salt] = storedPassword.split(".");
+    const hashedBuf = Buffer.from(hashedPassword, "hex");
+    const suppliedBuf = (await scryptAsync(suppliedPassword, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Erreur lors de la vérification du mot de passe:", error);
+    return false;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);

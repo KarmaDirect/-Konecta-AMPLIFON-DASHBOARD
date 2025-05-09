@@ -43,38 +43,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
-      // Vérifier si un utilisateur avec ce nom d'utilisateur existe déjà dans localStorage
-      const existingUsers = localStorage.getItem("registeredUsers");
-      let users = existingUsers ? JSON.parse(existingUsers) : [];
+      // Utiliser l'API pour la connexion
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
       
-      // Rechercher l'utilisateur par nom d'utilisateur
-      const foundUser = users.find((user: any) => user.username === username);
-      
-      // Si aucun utilisateur n'est trouvé, rejeter la connexion
-      if (!foundUser) {
-        throw new Error("Utilisateur non trouvé");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Échec de la connexion");
       }
       
-      // Vérifier que le mot de passe existe et correspond exactement
-      if (!foundUser.password) {
-        throw new Error("Compte invalide - veuillez vous réinscrire");
-      }
+      const loggedInUser = await response.json();
       
-      if (foundUser.password !== password) {
-        throw new Error("Mot de passe incorrect");
-      }
-      
-      // Créer l'objet utilisateur pour la session
-      const loggedInUser: User = {
-        id: foundUser.id || 1,
-        name: foundUser.name || username,
-        objectif: 10,
-        currentCRM: 0,
-        currentDigital: 0,
-        role: foundUser.role || "AGENT",
-      };
-
-      // Sauvegarde dans localStorage
+      // Sauvegarde dans localStorage pour la session locale
       localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
       setCurrentUser(loggedInUser);
 
@@ -82,6 +67,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Connexion réussie",
         description: `Bienvenue ${loggedInUser.name}!`,
       });
+      
+      // Diffuser la connexion via WebSocket
+      const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`);
+      socket.onopen = () => {
+        socket.send(JSON.stringify({
+          type: 'login',
+          data: {
+            userId: loggedInUser.id,
+            username: loggedInUser.name
+          }
+        }));
+        socket.close();
+      };
+      
     } catch (error) {
       console.error("Erreur de connexion:", error);
       toast({
@@ -95,70 +94,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: RegisterData) => {
     try {
-      // Simulation d'inscription pour la démo
-      // Dans une vraie application, ce serait une requête API
-      const mockUser: User = {
-        id: 1,
-        name: userData.name,
-        objectif: 10,
-        currentCRM: 0,
-        currentDigital: 0,
-        role: userData.role,
-      };
+      // Utiliser l'API pour l'inscription
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
       
-      // Enregistrement de l'utilisateur dans la liste des utilisateurs enregistrés
-      const existingUsers = localStorage.getItem("registeredUsers");
-      let users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      // Vérifier si l'utilisateur existe déjà
-      const existingIndex = users.findIndex((user: any) => user.username === userData.username);
-      
-      if (existingIndex >= 0) {
-        // Mise à jour de l'utilisateur existant
-        users[existingIndex] = {
-          username: userData.username,
-          name: userData.name,
-          role: userData.role,
-          password: userData.password
-        };
-      } else {
-        // Ajout du nouvel utilisateur
-        users.push({
-          username: userData.username,
-          name: userData.name,
-          role: userData.role,
-          password: userData.password
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Échec de l'inscription");
       }
       
-      localStorage.setItem("registeredUsers", JSON.stringify(users));
-
-      // Sauvegarde dans localStorage pour la session courante
-      localStorage.setItem("currentUser", JSON.stringify(mockUser));
-      setCurrentUser(mockUser);
+      const newUser = await response.json();
+      
+      // Sauvegarde dans localStorage pour la session locale
+      localStorage.setItem("currentUser", JSON.stringify(newUser));
+      setCurrentUser(newUser);
 
       toast({
         title: "Inscription réussie",
-        description: `Bienvenue ${mockUser.name}!`,
+        description: `Bienvenue ${newUser.name}!`,
       });
+      
+      // Diffuser l'inscription via WebSocket
+      const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`);
+      socket.onopen = () => {
+        socket.send(JSON.stringify({
+          type: 'register',
+          data: {
+            userId: newUser.id,
+            username: newUser.name
+          }
+        }));
+        socket.close();
+      };
     } catch (error) {
       console.error("Erreur d'inscription:", error);
       toast({
         title: "Erreur d'inscription",
-        description: "Impossible de créer votre compte.",
+        description: error instanceof Error ? error.message : "Impossible de créer votre compte.",
         variant: "destructive",
       });
       throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("currentUser");
-    setCurrentUser(null);
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès.",
-    });
+  const logout = async () => {
+    try {
+      // Appel à l'API pour la déconnexion
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Échec de la déconnexion");
+      }
+      
+      // Supprimer les données locales
+      localStorage.removeItem("currentUser");
+      setCurrentUser(null);
+      
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès.",
+      });
+      
+      // Diffuser la déconnexion via WebSocket
+      const user = currentUser;
+      if (user) {
+        const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`);
+        socket.onopen = () => {
+          socket.send(JSON.stringify({
+            type: 'logout',
+            data: {
+              userId: user.id,
+              username: user.name
+            }
+          }));
+          socket.close();
+        };
+      }
+    } catch (error) {
+      console.error("Erreur de déconnexion:", error);
+      toast({
+        title: "Erreur de déconnexion",
+        description: "Un problème est survenu lors de la déconnexion.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isAdmin = currentUser?.role === "ADMIN";
