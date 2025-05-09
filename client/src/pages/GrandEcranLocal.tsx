@@ -166,8 +166,12 @@ export default function GrandEcranLocal() {
     const value = type === "CRM" ? (agent.currentCRM || 0) : (agent.currentDigital || 0);
     const objectif = agent.objectif;
     
-    const completionRatio = Math.min(Math.max(0, 1 - (value / objectif)), 1);
-    const completedRdv = Math.max(0, objectif - value);
+    // Calcul du ratio de complétion en utilisant la même formule que dans le Dashboard
+    // Quand value = 0, on a complété 100% de l'objectif
+    // Quand value est négatif, c'est un bonus
+    const bonusRdv = value < 0 ? Math.abs(value) : 0;
+    const completedRdv = Math.max(0, objectif - Math.max(0, value));
+    const completionRatio = objectif > 0 ? Math.min(1, (completedRdv + bonusRdv) / objectif) : 1;
     const emoji = getEmoji(value, objectif);
     
     const isCRM = type === "CRM";
@@ -489,10 +493,13 @@ export default function GrandEcranLocal() {
                 <p className="text-3xl font-bold">{totalDigitalBonus} ⭐</p>
               </div>
             </div>
-            <Progress value={digitalCompletionRate} className="h-6 mb-2" />
+            <Progress 
+              value={Math.min(100, totalDigitalObjectif > 0 ? Math.round((totalDigitalRealises + totalDigitalBonus) / totalDigitalObjectif * 100) : 0)} 
+              className="h-6 mb-2 bg-purple-600" 
+            />
             <div className="flex justify-between text-sm">
               <span>Progression: {totalDigitalRealises}/{totalDigitalObjectif}</span>
-              <span>{digitalCompletionRate}%</span>
+              <span>{totalDigitalObjectif > 0 ? Math.round((totalDigitalRealises + totalDigitalBonus) / totalDigitalObjectif * 100) : 0}%</span>
             </div>
             <div className="mt-2">
               <div className="font-bold text-yellow-300 text-center">
