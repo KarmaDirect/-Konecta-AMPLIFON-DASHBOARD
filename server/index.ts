@@ -22,14 +22,19 @@ app.use(session({
   store: new PgSession({
     pool,
     tableName: 'session',
-    createTableIfMissing: true
+    createTableIfMissing: true,
+    pruneSessionInterval: 60, // Nettoyer les sessions expirées toutes les 60 secondes
   }),
   secret: process.env.SESSION_SECRET || 'konecta-amplifon-secret',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Réinitialiser le délai d'expiration à chaque requête
+  name: 'konecta.sid', // Nom personnalisé pour éviter les conflits
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 jours
+    secure: false, // Même en prod, on accepte HTTP pour le moment
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 jours
+    sameSite: 'lax'
   }
 }));
 

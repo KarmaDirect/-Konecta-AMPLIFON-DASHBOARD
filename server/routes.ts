@@ -517,7 +517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const agent = await storage.createAgent(validatedData);
       console.log("Agent créé avec succès, ID:", agent.id);
       
-      // Notification en temps réel à tous les clients
+      // Notification en temps réel à tous les clients via broadcast uniquement
+      // Éviter la double diffusion qui cause des duplications
       const message = {
         type: 'agent_created',
         data: { agent }
@@ -525,17 +526,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Diffusion de l'événement 'agent_created' à tous les clients");
       req.broadcast(message);
-      
-      // Diffuser également via WebSockets directement
-      const serializedMessage = JSON.stringify(message);
-      let clientCount = 0;
-      clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(serializedMessage);
-          clientCount++;
-        }
-      });
-      console.log(`Message 'agent_created' envoyé à ${clientCount} clients WebSocket`);
       
       // On répond au client original
       res.status(201).json(agent);

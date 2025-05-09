@@ -31,7 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Charger l'utilisateur depuis le serveur au démarrage
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté via une session
-    fetch('/api/user')
+    fetch('/api/user', {
+      credentials: 'include', // Inclure les cookies de session
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      }
+    })
       .then(response => {
         if (response.ok) {
           return response.json();
@@ -45,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .then(user => {
         if (user) {
+          console.log("Utilisateur authentifié:", user);
           setCurrentUser(user);
+        } else {
+          console.log("Aucun utilisateur connecté");
         }
       })
       .catch(error => {
@@ -57,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
+        credentials: 'include', // Important pour conserver la session
         headers: {
           'Content-Type': 'application/json',
         },
@@ -91,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/register', {
         method: 'POST',
+        credentials: 'include', // Important pour conserver la session
         headers: {
           'Content-Type': 'application/json',
         },
@@ -125,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/logout', {
         method: 'POST',
+        credentials: 'include', // Important pour que le serveur reçoive le cookie de session
         headers: {
           'Content-Type': 'application/json',
         }

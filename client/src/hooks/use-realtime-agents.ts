@@ -27,42 +27,52 @@ export function useRealtimeAgents() {
     wsClient.on<{ agent: Agent }>('agent_created', (data) => {
       console.log('Agent créé reçu via WebSocket:', data.agent);
       
-      // Mettre à jour le cache en ajoutant le nouvel agent
+      // Mettre à jour le cache principal (/api/agents) une seule fois
+      // en veillant à ne pas dupliquer l'agent
       queryClient.setQueryData<Agent[] | undefined>(['/api/agents'], (oldData) => {
         if (!oldData) return [data.agent];
         
-        // Vérifier si l'agent existe déjà (éviter les doublons)
+        // Vérifier si l'agent existe déjà dans le cache
         const exists = oldData.some(a => a.id === data.agent.id);
         if (exists) {
+          // Si oui, on ne fait que mettre à jour ses données
           return oldData.map(a => a.id === data.agent.id ? data.agent : a);
         } else {
+          // Si non, on l'ajoute à la liste
           return [...oldData, data.agent];
         }
       });
       
-      // Forcer un rafraîchissement des données pour les autres vues
-      queryClient.invalidateQueries({ queryKey: ['/api/agents'] });
-      
-      // Mettre à jour les caches spécifiques
+      // Mettre à jour les caches spécifiques si nécessaire
       if (data.agent.currentCRM !== null) {
-        // Mettre à jour directement le cache des agents CRM
         queryClient.setQueryData<Agent[] | undefined>(['/api/agents/crm/true'], (oldData) => {
           if (!oldData) return [data.agent];
+          
+          // Éviter les doublons
           const exists = oldData.some(a => a.id === data.agent.id);
-          return exists ? oldData.map(a => a.id === data.agent.id ? data.agent : a) : [...oldData, data.agent];
+          if (exists) {
+            return oldData.map(a => a.id === data.agent.id ? data.agent : a);
+          } else {
+            return [...oldData, data.agent];
+          }
         });
       }
       
       if (data.agent.currentDigital !== null) {
-        // Mettre à jour directement le cache des agents Digital
         queryClient.setQueryData<Agent[] | undefined>(['/api/agents/digital/true'], (oldData) => {
           if (!oldData) return [data.agent];
+          
+          // Éviter les doublons
           const exists = oldData.some(a => a.id === data.agent.id);
-          return exists ? oldData.map(a => a.id === data.agent.id ? data.agent : a) : [...oldData, data.agent];
+          if (exists) {
+            return oldData.map(a => a.id === data.agent.id ? data.agent : a);
+          } else {
+            return [...oldData, data.agent];
+          }
         });
       }
       
-      // Notification pour informer l'utilisateur
+      // Notification pour informer l'utilisateur (une seule fois)
       toast({
         title: "Nouvel agent ajouté",
         description: `L'agent ${data.agent.name} a été ajouté à l'équipe`,
