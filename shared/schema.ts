@@ -3,26 +3,30 @@ import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 
-// Définition de l'énumération pour les types d'agents
+// Définition des énumérations
 export const agentTypeEnum = pgEnum("agent_type", ["HOT", "PROSPECT", "DIGI"]);
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "AGENT"]);
 
 // Table des utilisateurs
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  name: text("name").notNull(),
+  role: userRoleEnum("user_role").notNull().default("AGENT"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  name: true,
+  role: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-
-// Définition de l'énumération pour les rôles d'utilisateurs
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "AGENT"]);
 
 // Table des agents
 export const agents = pgTable("agents", {
@@ -40,7 +44,7 @@ export const agents = pgTable("agents", {
 });
 
 export const agentsRelations = relations(agents, ({ many }) => ({
-  achievements: many(achievements)
+  achievements: many(() => achievements)
 }));
 
 // Table des réalisations (pour suivre l'historique des RDV)
