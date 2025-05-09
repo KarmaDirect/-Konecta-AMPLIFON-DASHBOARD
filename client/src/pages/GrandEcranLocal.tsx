@@ -179,6 +179,62 @@ export default function GrandEcranLocal() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white p-4 md:p-6">
+      {/* Bande déroulante de motivation en haut */}
+      <div className="mb-6 mt-2 overflow-hidden sticky top-0 z-10">
+        <div className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-3 rounded-lg shadow-md relative">
+          <div className="animate-marquee whitespace-nowrap flex items-center">
+            {/* Messages de félicitations variés */}
+            {topCRMAgents.slice(0, 3).map((agent, index) => (
+              <div key={`top-crm-${index}`} className="inline-block mx-4 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
+                <span className="font-bold mr-2">🏆 {agent.name}</span>
+                <span className="text-white">
+                  {index === 0 ? `Leader CRM avec ${agent.objectif - (agent.currentCRM || 0)} RDV pris! Bravo!` :
+                   index === 1 ? `${agent.name} se distingue aujourd'hui! Superbe travail!` :
+                   `${agent.name} montre l'exemple! Continue comme ça!`}
+                </span>
+              </div>
+            ))}
+            
+            {/* Félicitations pour les meilleurs digitaux */}
+            {topDigitalAgents.slice(0, 3).map((agent, index) => (
+              <div key={`top-digital-${index}`} className="inline-block mx-4 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
+                <span className="font-bold mr-2">🏆 {agent.name}</span>
+                <span className="text-white">
+                  {index === 0 ? `Champion Digital avec ${agent.objectif - (agent.currentDigital || 0)} RDV! Félicitations!` :
+                   index === 1 ? `Performance remarquable sur le canal Digital!` :
+                   `Excellent rythme sur les RDV Digitaux!`}
+                </span>
+              </div>
+            ))}
+            
+            {/* Encouragements variés */}
+            {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
+              <div key={`bottom-crm-${index}`} className="inline-block mx-4 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
+                <span className="font-bold mr-2">💪 {agent.name}:</span>
+                <span className="text-white">
+                  {index === 0 ? `Encore quelques efforts pour atteindre ton objectif!` :
+                   index === 1 ? `Tu progresses bien, continue sur cette lancée!` :
+                   `Nous croyons en toi, tu vas y arriver!`}
+                </span>
+              </div>
+            ))}
+            
+            {/* Messages motivationnels généraux */}
+            <div className="inline-block mx-4 px-4 py-1 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
+              <span className="text-white font-bold">🚀 MISSION RDV MASTER: Chaque appel compte! Ensemble vers l'excellence!</span>
+            </div>
+            
+            <div className="inline-block mx-4 px-4 py-1 bg-orange-500 bg-opacity-30 rounded-lg border-l-4 border-orange-400">
+              <span className="text-white font-bold">✨ AMPLIFON: La qualité de service au cœur de notre mission!</span>
+            </div>
+            
+            <div className="inline-block mx-4 px-4 py-1 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
+              <span className="text-white font-bold">📞 KONECTA: Nos télévendeurs sont les meilleurs! Prouvons-le chaque jour!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <header className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div className="text-center mx-auto">
@@ -307,54 +363,7 @@ export default function GrandEcranLocal() {
         </button>
       </div>
 
-      {/* Bande déroulante de motivation */}
-      <div className="mt-8 mb-8 overflow-hidden">
-        <div className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-4 rounded-lg shadow-md relative">
-          <div className="animate-marquee whitespace-nowrap flex items-center">
-            {/* Félicitations pour les 3 meilleurs agents CRM */}
-            {topCRMAgents.slice(0, 3).map((agent, index) => (
-              <div key={`top-crm-${index}`} className="inline-block mx-4 px-6 py-2 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
-                <span className="font-bold mr-2">🏆 CRM #{index+1}:</span>
-                <span className="font-bold text-yellow-300 mr-2">{agent.name}</span>
-                <span className="text-white">{getCongratulationMessage(agent, "currentCRM")}</span>
-              </div>
-            ))}
-            
-            {/* Félicitations pour les 3 meilleurs agents Digital */}
-            {topDigitalAgents.slice(0, 3).map((agent, index) => (
-              <div key={`top-digital-${index}`} className="inline-block mx-4 px-6 py-2 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
-                <span className="font-bold mr-2">🏆 DIGITAL #{index+1}:</span>
-                <span className="font-bold text-purple-300 mr-2">{agent.name}</span>
-                <span className="text-white">{getCongratulationMessage(agent, "currentDigital")}</span>
-              </div>
-            ))}
-            
-            {/* Encouragements pour les 3 agents CRM en retard */}
-            {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
-              <div key={`bottom-crm-${index}`} className="inline-block mx-4 px-6 py-2 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
-                <span className="font-bold mr-2">💪 ALLEZ</span>
-                <span className="font-bold text-blue-300 mr-2">{agent.name}:</span>
-                <span className="text-white">{getEncouragementMessage(agent, "currentCRM")}</span>
-              </div>
-            ))}
-            
-            {/* Encouragements pour les 3 agents Digital en retard */}
-            {getBottomAgents(digitalAgents, "currentDigital").map((agent, index) => (
-              <div key={`bottom-digital-${index}`} className="inline-block mx-4 px-6 py-2 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
-                <span className="font-bold mr-2">💪 ALLEZ</span>
-                <span className="font-bold text-teal-300 mr-2">{agent.name}:</span>
-                <span className="text-white">{getEncouragementMessage(agent, "currentDigital")}</span>
-              </div>
-            ))}
 
-            {/* Message de motivation général */}
-            <div className="inline-block mx-4 px-6 py-2 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
-              <span className="font-bold text-white">🚀 MISSION RDV MASTER:</span>
-              <span className="text-white ml-2">Ensemble, nous pouvons atteindre tous nos objectifs! Chaque rendez-vous compte!</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <footer className="mt-10 text-center text-gray-400">
         <p className="text-lg font-medium mb-2">
