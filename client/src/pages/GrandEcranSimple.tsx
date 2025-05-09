@@ -5,6 +5,7 @@ import { useAgents, useCRMAgents, useDigitalAgents } from "@/hooks/use-agents";
 import { Agent, getEmoji } from "@/lib/agent";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function GrandEcranSimple() {
   const { data: allAgents = [], isLoading: isAllAgentsLoading } = useAgents();
@@ -14,13 +15,27 @@ export default function GrandEcranSimple() {
   const { toast } = useToast();
   
   // Rafraîchissement automatique des données
+  const queryClient = useQueryClient();
+  
   useEffect(() => {
     const intervalId = setInterval(() => {
+      // Rafraîchir les données des agents
+      queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/crm/true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/digital/true"] });
+      
       setLastRefresh(new Date());
+      
+      // Afficher un toast pour informer l'utilisateur
+      toast({
+        title: "Données rafraîchies",
+        description: "Les statistiques ont été mises à jour",
+        variant: "default"
+      });
     }, 30000); // Toutes les 30 secondes
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [queryClient, toast]);
   
   // Notifie l'utilisateur quand les données sont chargées
   useEffect(() => {
@@ -54,21 +69,27 @@ export default function GrandEcranSimple() {
   const totalCRMObjectif = crmAgents.reduce((sum, agent) => sum + agent.objectif, 0);
   const totalDigitalObjectif = digitalAgents.reduce((sum, agent) => sum + agent.objectif, 0);
   
+  // Les RDV réalisés sont les RDV qui ne sont plus à prendre (objectif - currentCRM)
+  // Si currentCRM est négatif, cela signifie que l'agent a dépassé son objectif
   const totalCRMRealises = crmAgents.reduce((sum, agent) => {
     const currentCRM = agent.currentCRM || 0;
-    const realises = agent.objectif - currentCRM;
-    return sum + (realises > 0 ? realises : 0);
+    // Si currentCRM est négatif, l'agent a réalisé son objectif complet
+    // Si currentCRM est positif, l'agent a réalisé (objectif - currentCRM) RDV
+    const realises = currentCRM <= 0 ? agent.objectif : (agent.objectif - currentCRM);
+    return sum + realises;
   }, 0);
   
   const totalDigitalRealises = digitalAgents.reduce((sum, agent) => {
     const currentDigital = agent.currentDigital || 0;
-    const realises = agent.objectif - currentDigital;
-    return sum + (realises > 0 ? realises : 0);
+    // Même logique que pour CRM
+    const realises = currentDigital <= 0 ? agent.objectif : (agent.objectif - currentDigital);
+    return sum + realises;
   }, 0);
   
   const crmCompletionRate = totalCRMObjectif ? Math.round((totalCRMRealises / totalCRMObjectif) * 100) : 0;
   const digitalCompletionRate = totalDigitalObjectif ? Math.round((totalDigitalRealises / totalDigitalObjectif) * 100) : 0;
   
+  // Les RDV bonus sont les RDV pris en plus de l'objectif (quand currentCRM est négatif)
   const totalCRMBonus = crmAgents.reduce((sum, agent) => {
     const currentCRM = agent.currentCRM || 0;
     return sum + (currentCRM < 0 ? Math.abs(currentCRM) : 0);
