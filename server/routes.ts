@@ -542,14 +542,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Agent créé avec succès, ID:", agent.id);
       
       // Notification en temps réel à tous les clients via broadcast uniquement
-      // Éviter la double diffusion qui cause des duplications
-      const message = {
-        type: 'agent_created',
-        data: { agent }
-      };
-      
-      console.log("Diffusion de l'événement 'agent_created' à tous les clients");
-      req.broadcast(message);
+      // Utiliser un délai pour éviter les duplications
+      setTimeout(() => {
+        const message = {
+          type: 'agent_created',
+          data: { agent }
+        };
+        
+        console.log("Diffusion de l'événement 'agent_created' à tous les clients");
+        req.broadcast(message);
+      }, 50); // Délai court de 50ms pour éviter les duplications
       
       // On répond au client original
       res.status(201).json(agent);

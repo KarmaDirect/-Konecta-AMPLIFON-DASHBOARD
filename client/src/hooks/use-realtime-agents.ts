@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { wsClient } from '@/lib/websocket';
 import { Agent } from '@/lib/agent';
@@ -13,6 +13,10 @@ export function useRealtimeAgents() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
+  // Utiliser une référence pour suivre les événements de création/mise à jour d'agents
+  // afin d'éviter de traiter plusieurs fois le même événement
+  const processedEvents = useRef<Map<string, number>>(new Map());
+  
   useEffect(() => {
     // Se connecter au WebSocket
     wsClient.connect();
@@ -25,6 +29,20 @@ export function useRealtimeAgents() {
     
     // Écouter les événements de création d'agent
     wsClient.on<{ agent: Agent }>('agent_created', (data) => {
+      // Vérifier si nous avons déjà traité cet agent récemment
+      const eventKey = `create_${data.agent.id}`;
+      const now = Date.now();
+      const lastProcessed = processedEvents.current.get(eventKey);
+      
+      // Si le même événement a été reçu dans les 2 dernières secondes, l'ignorer
+      if (lastProcessed && now - lastProcessed < 2000) {
+        console.log('Agent déjà traité récemment, ignorer la duplication:', data.agent.id);
+        return;
+      }
+      
+      // Marquer cet agent comme traité
+      processedEvents.current.set(eventKey, now);
+      
       console.log('Agent créé reçu via WebSocket:', data.agent);
       
       // Mettre à jour le cache principal (/api/agents) une seule fois
