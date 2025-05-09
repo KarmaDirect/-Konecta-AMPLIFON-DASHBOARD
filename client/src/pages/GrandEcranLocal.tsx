@@ -242,95 +242,140 @@ export default function GrandEcranLocal() {
           <div className="animate-marquee whitespace-nowrap flex items-center">
             {/* Messages de félicitations variés pour CRM */}
             {topCRMAgents.slice(0, 3).map((agent, index) => (
-              <div key={`top-crm-${index}`} className="inline-block mx-4 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
+              <div key={`top-crm-${index}`} className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
                 <span className="font-bold mr-2">🏆 {agent.name}</span>
                 <span className="text-white">
-                  {index === 0 ? `Leader CRM avec ${agent.objectif - (agent.currentCRM || 0)} RDV pris! Bravo pour cette performance exceptionnelle!` :
-                   index === 1 ? `${agent.name} se distingue aujourd'hui! Superbe travail et excellent taux de conversion!` :
-                   `${agent.name} montre l'exemple avec constance et professionnalisme! Continue comme ça!`}
+                  {index === 0 ? `${agent.objectif - (agent.currentCRM || 0)} RDV pris! Bravo!` :
+                   index === 1 ? `Excellent travail CRM!` :
+                   `Continue comme ça!`}
                 </span>
               </div>
             ))}
             
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
             {/* Messages supplémentaires pour CRM */}
-            <div className="inline-block mx-4 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
-              <span className="text-white font-bold">🔥 L'équipe CRM bat tous les records aujourd'hui! Continuez sur cette lancée exceptionnelle!</span>
+            <div className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
+              <span className="text-white font-bold">🔥 L'équipe CRM bat tous les records!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
-              <span className="text-white font-bold">⭐ Les rendez-vous CRM sont en progression constante - Bravo à toute l'équipe pour votre engagement!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-yellow-500 bg-opacity-30 rounded-lg border-l-4 border-yellow-400">
+              <span className="text-white font-bold">⭐ Progression constante - Bravo à tous!</span>
             </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
             
             {/* Félicitations pour les meilleurs digitaux */}
             {topDigitalAgents.slice(0, 3).map((agent, index) => (
-              <div key={`top-digital-${index}`} className="inline-block mx-4 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
+              <div key={`top-digital-${index}`} className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
                 <span className="font-bold mr-2">🏆 {agent.name}</span>
                 <span className="text-white">
-                  {index === 0 ? `Champion Digital avec ${agent.objectif - (agent.currentDigital || 0)} RDV! Félicitations pour cette performance remarquable!` :
-                   index === 1 ? `Performance impressionnante sur le canal Digital! ${agent.name} inspire toute l'équipe par son efficacité!` :
-                   `Excellent rythme sur les RDV Digitaux! ${agent.name} maîtrise parfaitement les techniques de conversion!`}
+                  {index === 0 ? `${agent.objectif - (agent.currentDigital || 0)} RDV Digital! Félicitations!` :
+                   index === 1 ? `Performance impressionnante!` :
+                   `Excellent rythme!`}
                 </span>
               </div>
             ))}
             
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
             {/* Messages supplémentaires pour Digital */}
-            <div className="inline-block mx-4 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
-              <span className="text-white font-bold">📱 L'équipe Digitale atteint de nouveaux sommets! Votre expertise fait la différence pour nos patients!</span>
+            <div className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
+              <span className="text-white font-bold">📱 L'équipe Digitale atteint de nouveaux sommets!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
-              <span className="text-white font-bold">💫 Chaque clic compte, chaque conversation mène à un rendez-vous - L'excellence digitale en action!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-purple-500 bg-opacity-30 rounded-lg border-l-4 border-purple-400">
+              <span className="text-white font-bold">💫 Chaque clic compte - Excellence digitale!</span>
             </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
             
             {/* Encouragements variés */}
             {getBottomAgents(crmAgents, "currentCRM").map((agent, index) => (
-              <div key={`bottom-crm-${index}`} className="inline-block mx-4 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
+              <div key={`bottom-crm-${index}`} className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
                 <span className="font-bold mr-2">💪 {agent.name}:</span>
                 <span className="text-white">
-                  {index === 0 ? `Encore quelques efforts pour atteindre ton objectif! Nous savons que tu peux transformer chaque conversation en succès!` :
-                   index === 1 ? `Tu progresses bien, continue sur cette lancée! Les prochains appels seront les bons!` :
-                   `Nous croyons en toi, tu vas y arriver! Ta persévérance est la clé de ton succès à venir!`}
+                  {index === 0 ? `Encore quelques efforts!` :
+                   index === 1 ? `Tu progresses bien!` :
+                   `Nous croyons en toi!`}
                 </span>
               </div>
             ))}
             
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
             {/* Messages supplémentaires d'encouragement */}
-            <div className="inline-block mx-4 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
-              <span className="text-white font-bold">🌟 La persévérance est la clé du succès - Gardez confiance et transformez chaque appel en opportunité!</span>
+            <div className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
+              <span className="text-white font-bold">🌟 La persévérance est la clé du succès!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
-              <span className="text-white font-bold">🔄 Chaque essai nous rapproche de la réussite - Gardez votre énergie et votre motivation!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-blue-500 bg-opacity-30 rounded-lg border-l-4 border-blue-400">
+              <span className="text-white font-bold">🔄 Chaque essai nous rapproche du succès!</span>
             </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
             
             {/* Messages motivationnels généraux */}
-            <div className="inline-block mx-4 px-4 py-1 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
-              <span className="text-white font-bold">🚀 MISSION RDV MASTER: Chaque appel compte! Ensemble vers l'excellence! Notre force est dans notre cohésion d'équipe!</span>
+            <div className="inline-block mx-6 px-4 py-1 bg-green-500 bg-opacity-30 rounded-lg border-l-4 border-green-400">
+              <span className="text-white font-bold">🚀 MISSION RDV MASTER: Ensemble vers l'excellence!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-orange-500 bg-opacity-30 rounded-lg border-l-4 border-orange-400">
-              <span className="text-white font-bold">✨ AMPLIFON: La qualité de service au cœur de notre mission! Nous changeons la vie de nos patients grâce à votre engagement!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-orange-500 bg-opacity-30 rounded-lg border-l-4 border-orange-400">
+              <span className="text-white font-bold">✨ AMPLIFON: La qualité au cœur de notre mission!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
-              <span className="text-white font-bold">📞 KONECTA: Nos télévendeurs sont les meilleurs! Prouvons-le chaque jour! Votre expertise fait notre réputation d'excellence!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-teal-500 bg-opacity-30 rounded-lg border-l-4 border-teal-400">
+              <span className="text-white font-bold">📞 KONECTA: Les meilleurs télévendeurs!</span>
             </div>
+            
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
             
             {/* Citations motivantes */}
-            <div className="inline-block mx-4 px-4 py-1 bg-pink-500 bg-opacity-30 rounded-lg border-l-4 border-pink-400">
-              <span className="text-white font-bold">🌈 "Le succès n'est pas la clé du bonheur. Le bonheur est la clé du succès." - Nous croyons en chacun d'entre vous!</span>
+            <div className="inline-block mx-6 px-4 py-1 bg-pink-500 bg-opacity-30 rounded-lg border-l-4 border-pink-400">
+              <span className="text-white font-bold">🌈 Le bonheur est la clé du succès!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-indigo-500 bg-opacity-30 rounded-lg border-l-4 border-indigo-400">
-              <span className="text-white font-bold">🌟 "Les défis sont ce qui rend la vie intéressante, les surmonter est ce qui lui donne un sens." - Ensemble, nous relevons tous les défis!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-indigo-500 bg-opacity-30 rounded-lg border-l-4 border-indigo-400">
+              <span className="text-white font-bold">🌟 Ensemble, nous relevons tous les défis!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-lime-500 bg-opacity-30 rounded-lg border-l-4 border-lime-400">
-              <span className="text-white font-bold">🎯 "L'excellence n'est pas un acte mais une habitude." - Merci à vous tous de faire de l'excellence notre standard quotidien!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-lime-500 bg-opacity-30 rounded-lg border-l-4 border-lime-400">
+              <span className="text-white font-bold">🎯 L'excellence est une habitude quotidienne!</span>
             </div>
             
-            <div className="inline-block mx-4 px-4 py-1 bg-cyan-500 bg-opacity-30 rounded-lg border-l-4 border-cyan-400">
-              <span className="text-white font-bold">💎 "La qualité n'est jamais un accident; c'est toujours le résultat d'un effort intelligent." - Votre effort fait notre réussite collective!</span>
+            {/* Séparateur */}
+            <div className="inline-block mx-8 w-4"></div>
+            
+            <div className="inline-block mx-6 px-4 py-1 bg-cyan-500 bg-opacity-30 rounded-lg border-l-4 border-cyan-400">
+              <span className="text-white font-bold">💎 La qualité est le résultat de l'effort!</span>
             </div>
           </div>
         </div>
