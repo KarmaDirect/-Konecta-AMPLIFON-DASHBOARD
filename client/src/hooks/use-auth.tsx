@@ -44,49 +44,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     try {
       // Vérifier si un utilisateur avec ce nom d'utilisateur existe déjà dans localStorage
-      // pour maintenir la cohérence avec l'inscription
       const existingUsers = localStorage.getItem("registeredUsers");
       let users = existingUsers ? JSON.parse(existingUsers) : [];
       
       // Rechercher l'utilisateur par nom d'utilisateur
       const foundUser = users.find((user: any) => user.username === username);
       
-      let mockUser: User;
-      
-      if (foundUser) {
-        // Utiliser le rôle enregistré lors de l'inscription
-        mockUser = {
-          id: 1,
-          name: foundUser.name || username,
-          objectif: 10,
-          currentCRM: 0,
-          currentDigital: 0,
-          role: foundUser.role || "AGENT",
-        };
-      } else {
-        // Nouvel utilisateur, détermine le rôle en fonction du nom d'utilisateur
-        // par défaut, maintient la compatibilité avec l'existant
-        mockUser = {
-          id: 1,
-          name: username,
-          objectif: 10,
-          currentCRM: 0,
-          currentDigital: 0,
-          role: username.toLowerCase().includes("admin") ? "ADMIN" : "AGENT",
-        };
-        
-        // Enregistrer ce nouvel utilisateur pour les futures connexions
-        users.push({username, name: username, role: mockUser.role});
-        localStorage.setItem("registeredUsers", JSON.stringify(users));
+      // Si aucun utilisateur n'est trouvé, rejeter la connexion
+      if (!foundUser) {
+        throw new Error("Utilisateur non trouvé");
       }
+      
+      // Vérifier le mot de passe (ajout de la vérification de mot de passe)
+      if (!foundUser.password || foundUser.password !== password) {
+        throw new Error("Mot de passe incorrect");
+      }
+      
+      // Créer l'objet utilisateur pour la session
+      const loggedInUser: User = {
+        id: foundUser.id || 1,
+        name: foundUser.name || username,
+        objectif: 10,
+        currentCRM: 0,
+        currentDigital: 0,
+        role: foundUser.role || "AGENT",
+      };
 
       // Sauvegarde dans localStorage
-      localStorage.setItem("currentUser", JSON.stringify(mockUser));
-      setCurrentUser(mockUser);
+      localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
+      setCurrentUser(loggedInUser);
 
       toast({
         title: "Connexion réussie",
-        description: `Bienvenue ${mockUser.name}!`,
+        description: `Bienvenue ${loggedInUser.name}!`,
       });
     } catch (error) {
       console.error("Erreur de connexion:", error);
