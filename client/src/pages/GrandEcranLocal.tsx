@@ -45,16 +45,49 @@ export default function GrandEcranLocal() {
     }
   };
   
-  // Chargement initial
+  // Chargement initial et rafraîchissement automatique
   useEffect(() => {
+    // Charge immédiatement
     loadAgents();
     
-    // Rafraîchissement périodique
-    const interval = setInterval(() => {
+    // Rafraîchissement toutes les 5 minutes (300000ms)
+    const dataInterval = setInterval(() => {
       loadAgents();
-    }, 30000);
+    }, 300000);
     
-    return () => clearInterval(interval);
+    // Gestion du mode plein écran pour affichage 24/7
+    const handleFullscreen = () => {
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        element.requestFullscreen().catch(err => {
+          console.error('Erreur passage en plein écran:', err);
+        });
+      }
+    };
+    
+    // Activer plein écran automatiquement après 3 secondes
+    const fullscreenTimeout = setTimeout(() => {
+      handleFullscreen();
+    }, 3000);
+    
+    // Prévenir la mise en veille et l'écran de veille
+    const keepAlive = () => {
+      // Force un petit rafraîchissement visuel
+      const currentOpacity = document.body.style.opacity;
+      document.body.style.opacity = '0.99999';
+      setTimeout(() => {
+        document.body.style.opacity = currentOpacity;
+      }, 500);
+    };
+    
+    // Garder le système actif toutes les 30 secondes
+    const keepAliveInterval = setInterval(keepAlive, 30000);
+    
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(keepAliveInterval);
+      clearTimeout(fullscreenTimeout);
+    };
   }, []);
   
   // Filtrer les agents avec CRM et Digital
@@ -164,6 +197,12 @@ export default function GrandEcranLocal() {
   
   // Retour à la page précédente
   const handleBack = () => {
+    // Sortir du mode plein écran si actif
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => {
+        console.error('Erreur sortie plein écran:', err);
+      });
+    }
     window.history.back();
   };
   
