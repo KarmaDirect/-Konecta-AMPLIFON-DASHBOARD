@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Agent, getEmoji, getAgentCompletionRatio } from "@/lib/agent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Medal, Star, Zap } from "lucide-react";
@@ -14,18 +14,21 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
   const borderColor = isCRM ? "border-blue-200" : "border-purple-200";
   const textColor = isCRM ? "text-blue-800" : "text-purple-800";
   const bgColor = isCRM ? "bg-blue-600" : "bg-purple-600";
-  const [prevAgents, setPrevAgents] = useState<Agent[]>([]);
+  const prevAgentsRef = useRef<Agent[]>([]);
   const [changedIndices, setChangedIndices] = useState<Record<string, boolean>>({});
 
-  // Calcul du nombre total de RDVs pris par tous les agents
-  const totalRdvsPris = agents.reduce((sum, agent) => {
-    if (agent[type] === null) return sum;
-    const rdvsPris = agent.objectif - (agent[type] || 0);
-    return sum + (rdvsPris > 0 ? rdvsPris : 0);
-  }, 0);
+  // Calcul du nombre total de RDVs pris par tous les agents (memoized)
+  const totalRdvsPris = useMemo(() => {
+    return agents.reduce((sum, agent) => {
+      if (agent[type] === null) return sum;
+      const rdvsPris = agent.objectif - (agent[type] || 0);
+      return sum + (rdvsPris > 0 ? rdvsPris : 0);
+    }, 0);
+  }, [agents, type]);
   
-  // Suivre les changements pour les animations
-  useEffect(() => {
+  // Fonction pour détecter les changements (memoized)
+  const detectChanges = useCallback(() => {
+    const prevAgents = prevAgentsRef.current;
     const newChangedIndices: Record<string, boolean> = {};
     
     agents.forEach((agent, index) => {
@@ -46,10 +49,18 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
       
       return () => clearTimeout(timer);
     }
-    
-    setPrevAgents([...agents]);
-    // Remarque: Nous retirons prevAgents des dépendances pour éviter les boucles infinies
   }, [agents, type]);
+  
+  // Suivre les changements pour les animations (optimisé)
+  useEffect(() => {
+    // Détecter les changements
+    const cleanup = detectChanges();
+    
+    // Mettre à jour la référence des agents précédents
+    prevAgentsRef.current = [...agents];
+    
+    return cleanup;
+  }, [detectChanges, agents]);
 
   // Animer l'entrée des agents
   const cardVariants = {
@@ -66,18 +77,21 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
     })
   };
   
-  // Calculer les badges de récompense
-  const getRewardBadge = (agent: Agent, index: number) => {
-    // Classer les agents par performance
-    const sortedAgents = [...agents].sort((a, b) => {
+  // Calculer les agents triés par performance (memoized)
+  const sortedAgents = useMemo(() => {
+    return [...agents].sort((a, b) => {
       const aRatio = a[type] !== null ? getAgentCompletionRatio(a, type) : 0;
       const bRatio = b[type] !== null ? getAgentCompletionRatio(b, type) : 0;
       return bRatio - aRatio;
     });
-    
+  }, [agents, type]);
+
+  // Calculer les badges de récompense (optimisé)
+  const getRewardBadge = useCallback((agent: Agent, index: number) => {
     const agentRank = sortedAgents.findIndex(a => a.id === agent.id);
+    const completionRatio = getAgentCompletionRatio(agent, type);
     
-    if (agentRank === 0 && getAgentCompletionRatio(agent, type) > 0.3) {
+    if (agentRank === 0 && completionRatio > 0.3) {
       return (
         <motion.div 
           className="absolute -top-3 -right-3 bg-yellow-400 rounded-full p-1 shadow-lg"
@@ -88,7 +102,7 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
           <Trophy className="h-5 w-5 text-white" />
         </motion.div>
       );
-    } else if (agentRank === 1 && getAgentCompletionRatio(agent, type) > 0.2) {
+    } else if (agentRank === 1 && completionRatio > 0.2) {
       return (
         <motion.div 
           className="absolute -top-3 -right-3 bg-gray-400 rounded-full p-1 shadow-lg"
@@ -99,7 +113,7 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
           <Medal className="h-5 w-5 text-white" />
         </motion.div>
       );
-    } else if (agentRank === 2 && getAgentCompletionRatio(agent, type) > 0.1) {
+    } else if (agentRank === 2 && completionRatio > 0.1) {
       return (
         <motion.div 
           className="absolute -top-3 -right-3 bg-amber-600 rounded-full p-1 shadow-lg"
@@ -113,7 +127,7 @@ export function TopAgents({ title, agents, type }: TopAgentsProps) {
     }
     
     return null;
-  };
+  }, [sortedAgents, type]);
   
   return (
     <motion.div 

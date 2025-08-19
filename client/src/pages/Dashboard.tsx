@@ -1,5 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { BorderBeam } from "@/components/ui/border-beam";
 import * as XLSX from "xlsx";
 import { TopAgents } from "@/components/TopAgents";
 import { AppointmentSection } from "@/components/AppointmentSection";
@@ -12,6 +18,7 @@ import { useTeamPresence } from "@/hooks/use-team-presence";
 import { wsClient } from "@/lib/websocket";
 import { TeamPresenceIndicator } from "@/components/TeamPresenceIndicator";
 import { GrandEcranGenerator } from "@/components/GrandEcranGenerator";
+import { Zap, Users, Target, TrendingUp, Award, Download, RefreshCw, UserPlus } from "lucide-react";
 
 export default function Dashboard() {
   const { currentUser, logout, isAdmin } = useAuth();
@@ -386,27 +393,40 @@ export default function Dashboard() {
     );
   };
 
-  const crmAgents = agents.filter((a) => a.currentCRM !== null);
-  const digitalAgents = agents.filter((a) => a.currentDigital !== null);
+  // Optimisation des calculs avec useMemo
+  const { crmAgents, digitalAgents, crmStats, digitalStats, topAgents } = useMemo(() => {
+    const crmFiltered = agents.filter((a) => a.currentCRM !== null);
+    const digitalFiltered = agents.filter((a) => a.currentDigital !== null);
 
-  const totalCRM = crmAgents.reduce((sum, a) => sum + a.objectif, 0);
-  const totalCRMRestants = crmAgents.reduce((sum, a) => sum + (a.currentCRM || 0), 0);
-  const totalDigital = digitalAgents.reduce((sum, a) => sum + a.objectif, 0);
-  const totalDigitalRestants = digitalAgents.reduce((sum, a) => sum + (a.currentDigital || 0), 0);
-  
-  // Calcul des RDV bonus (valeurs négatives) qui s'ajoutent au total
-  const totalCRMBonus = crmAgents.reduce((sum, a) => {
-    if (a.currentCRM === null || a.currentCRM >= 0) return sum;
-    return sum + Math.abs(a.currentCRM);
-  }, 0);
-  
-  const totalDigitalBonus = digitalAgents.reduce((sum, a) => {
-    if (a.currentDigital === null || a.currentDigital >= 0) return sum;
-    return sum + Math.abs(a.currentDigital);
-  }, 0);
+    const crmStats = {
+      total: crmFiltered.reduce((sum, a) => sum + a.objectif, 0),
+      restants: crmFiltered.reduce((sum, a) => sum + (a.currentCRM || 0), 0),
+      bonus: crmFiltered.reduce((sum, a) => {
+        if (a.currentCRM === null || a.currentCRM >= 0) return sum;
+        return sum + Math.abs(a.currentCRM);
+      }, 0)
+    };
 
-  const topCRMAgents = getTopAgents(agents, "currentCRM");
-  const topDigitalAgents = getTopAgents(agents, "currentDigital");
+    const digitalStats = {
+      total: digitalFiltered.reduce((sum, a) => sum + a.objectif, 0),
+      restants: digitalFiltered.reduce((sum, a) => sum + (a.currentDigital || 0), 0),
+      bonus: digitalFiltered.reduce((sum, a) => {
+        if (a.currentDigital === null || a.currentDigital >= 0) return sum;
+        return sum + Math.abs(a.currentDigital);
+      }, 0)
+    };
+
+    return {
+      crmAgents: crmFiltered,
+      digitalAgents: digitalFiltered,
+      crmStats,
+      digitalStats,
+      topAgents: {
+        crm: getTopAgents(agents, "currentCRM"),
+        digital: getTopAgents(agents, "currentDigital")
+      }
+    };
+  }, [agents]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 p-4 md:p-6 space-y-8">
@@ -446,195 +466,341 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900">📊 POINT RDV</h1>
-        <p className="text-center text-gray-500 mb-4">by hatim</p>
-        <h2 className="text-xl md:text-2xl font-semibold text-center text-blue-700 mb-6">Suivi Agents CRM & Digitaux</h2>
-
-        <div className="text-center mb-6">
-          <p className="text-gray-600 italic">
-            Utilisez le menu en haut pour accéder au Grand Écran ou à la page des Scripts
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center bg-gray-100 p-4 rounded-xl border-2 border-blue-300 shadow-md">
-          <div>
-            <h3 className="text-lg font-semibold text-blue-800">📋 CRM - Objectifs Spécifiques</h3>
-            <p className="my-1">Total agents : {crmAgents.length}</p>
-            <p className="my-1">Objectif total campagne : {rdvCRMTotal}</p>
-            <p className="my-1">Objectif total agents : {totalCRM}</p>
-            <p className="my-1">RDV restants : {totalCRMRestants}</p>
-            <p className="text-sm text-green-600 font-medium">
-              {totalCRM - totalCRMRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalCRMBonus} bonus</span>
-            </p>
-            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-              <div 
-                className="bg-green-600 h-4 rounded-full" 
-                style={{ 
-                  width: `${Math.min(100, rdvCRMTotal > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / rdvCRMTotal * 100) : 0)}%`
-                }}
-              >
-              </div>
+        {/* En-tête amélioré avec animations */}
+        <BlurFade delay={0.25} inView>
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <Target className="h-10 w-10 text-blue-600" />
+              <h1 className="text-3xl md:text-4xl font-bold text-blue-900">POINT RDV</h1>
+              <TrendingUp className="h-10 w-10 text-green-600" />
             </div>
-            <p className="text-xs mt-1">Progression campagne: {rdvCRMTotal > 0 ? Math.round(((totalCRM - totalCRMRestants) + totalCRMBonus) / rdvCRMTotal * 100) : 0}%</p>
+            <p className="text-gray-600 text-sm">Développé par Hatim • Version 2.0 Enhanced</p>
+            <h2 className="text-xl md:text-2xl font-semibold text-blue-700">
+              Suivi des Performances • Agents CRM & Digitaux
+            </h2>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-purple-800">💻 Digital - Objectifs Spécifiques</h3>
-            <p className="my-1">Total agents : {digitalAgents.length}</p>
-            <p className="my-1">Objectif total campagne : {rdvDigitalTotal}</p>
-            <p className="my-1">Objectif total agents : {totalDigital}</p>
-            <p className="my-1">RDV restants : {totalDigitalRestants}</p>
-            <p className="text-sm text-green-600 font-medium">
-              {totalDigital - totalDigitalRestants} RDV réalisés + <span className="text-yellow-500 font-bold">{totalDigitalBonus} bonus</span>
-            </p>
-            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-              <div 
-                className="bg-purple-600 h-4 rounded-full" 
-                style={{ 
-                  width: `${Math.min(100, rdvDigitalTotal > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / rdvDigitalTotal * 100) : 0)}%`
-                }}
-              >
-              </div>
-            </div>
-            <p className="text-xs mt-1">Progression campagne: {rdvDigitalTotal > 0 ? Math.round(((totalDigital - totalDigitalRestants) + totalDigitalBonus) / rdvDigitalTotal * 100) : 0}%</p>
-          </div>
-        </div>
+        </BlurFade>
 
-        {isAdmin && (
-          <div className="flex flex-col items-center bg-blue-100 p-5 rounded-xl space-y-4 shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl">
-              <input 
-                type="text" 
-                value={newAgent} 
-                onChange={(e) => setNewAgent(e.target.value)} 
-                placeholder="Nom de l'agent" 
-                className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto flex-grow"
-              />
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-1 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={isCRM} 
-                      onChange={() => setIsCRM(!isCRM)} 
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
-                    />
-                    <span>CRM</span>
-                  </label>
-                  <label className="flex items-center gap-1 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={isDigital} 
-                      onChange={() => setIsDigital(!isDigital)} 
-                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" 
-                    />
-                    <span>Digital</span>
-                  </label>
+        {/* Statistiques globales améliorées */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Section CRM */}
+          <BlurFade delay={0.5} inView>
+            <Card className="relative border-blue-200 shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
+              <BorderBeam size={250} duration={12} delay={0} />
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Users className="h-5 w-5" />
+                  CRM - Campagne Spécialisée
+                </CardTitle>
+                <CardDescription>Suivi des rendez-vous clients CRM</CardDescription>
+              </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-gray-600">Agents actifs</p>
+                  <p className="text-2xl font-bold text-blue-600">{crmAgents.length}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="objective-input" className="whitespace-nowrap">Objectif:</label>
+                <div className="space-y-1">
+                  <p className="text-gray-600">Objectif campagne</p>
+                  <p className="text-2xl font-bold text-blue-800">{rdvCRMTotal}</p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Objectif agents total</span>
+                  <Badge variant="outline" className="font-mono">{crmStats.total}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">RDV restants</span>
+                  <Badge variant="outline" className="font-mono">{crmStats.restants}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-green-700">RDV réalisés</span>
+                  <Badge className="bg-green-100 text-green-800 font-mono">
+                    {crmStats.total - crmStats.restants}
+                  </Badge>
+                </div>
+                {crmStats.bonus > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-yellow-700">RDV bonus ⭐</span>
+                    <Badge className="bg-yellow-100 text-yellow-800 font-mono">
+                      +{crmStats.bonus}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span>Progression campagne</span>
+                  <span className="font-mono">
+                    {rdvCRMTotal > 0 ? Math.round(((crmStats.total - crmStats.restants) + crmStats.bonus) / rdvCRMTotal * 100) : 0}%
+                  </span>
+                </div>
+                <Progress 
+                  value={rdvCRMTotal > 0 ? Math.min(100, ((crmStats.total - crmStats.restants) + crmStats.bonus) / rdvCRMTotal * 100) : 0}
+                  className="h-3"
+                />
+              </div>
+            </CardContent>
+            </Card>
+          </BlurFade>
+
+          {/* Section Digital */}
+          <BlurFade delay={0.75} inView>
+            <Card className="relative border-purple-200 shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
+              <BorderBeam size={250} duration={12} delay={6} colorFrom="#9c40ff" colorTo="#ffaa40" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-purple-800">
+                <Zap className="h-5 w-5" />
+                Digital - Campagne Numérique
+              </CardTitle>
+              <CardDescription>Suivi des rendez-vous digitaux</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-gray-600">Agents actifs</p>
+                  <p className="text-2xl font-bold text-purple-600">{digitalAgents.length}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-gray-600">Objectif campagne</p>
+                  <p className="text-2xl font-bold text-purple-800">{rdvDigitalTotal}</p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Objectif agents total</span>
+                  <Badge variant="outline" className="font-mono">{digitalStats.total}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">RDV restants</span>
+                  <Badge variant="outline" className="font-mono">{digitalStats.restants}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-green-700">RDV réalisés</span>
+                  <Badge className="bg-green-100 text-green-800 font-mono">
+                    {digitalStats.total - digitalStats.restants}
+                  </Badge>
+                </div>
+                {digitalStats.bonus > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-yellow-700">RDV bonus ⭐</span>
+                    <Badge className="bg-yellow-100 text-yellow-800 font-mono">
+                      +{digitalStats.bonus}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span>Progression campagne</span>
+                  <span className="font-mono">
+                    {rdvDigitalTotal > 0 ? Math.round(((digitalStats.total - digitalStats.restants) + digitalStats.bonus) / rdvDigitalTotal * 100) : 0}%
+                  </span>
+                </div>
+                <Progress 
+                  value={rdvDigitalTotal > 0 ? Math.min(100, ((digitalStats.total - digitalStats.restants) + digitalStats.bonus) / rdvDigitalTotal * 100) : 0}
+                  className="h-3"
+                />
+              </div>
+            </CardContent>
+            </Card>
+          </BlurFade>
+        </div>
+
+        {/* Section Administration Améliorée */}
+        {isAdmin && (
+          <BlurFade delay={1.0} inView>
+            <Card className="relative border-blue-200 shadow-lg overflow-hidden">
+              <BorderBeam size={200} duration={15} delay={3} colorFrom="#4285f4" colorTo="#34a853" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <UserPlus className="h-5 w-5" />
+                  Administration des Agents
+                </CardTitle>
+                <CardDescription>
+                  Ajouter de nouveaux agents et gérer les objectifs de l&apos;équipe
+                </CardDescription>
+              </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Formulaire d'ajout d'agent */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Nom de l&apos;agent</label>
                   <input 
-                    id="objective-input"
+                    type="text" 
+                    value={newAgent} 
+                    onChange={(e) => setNewAgent(e.target.value)} 
+                    placeholder="Saisir le nom..." 
+                    className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Objectif RDV</label>
+                  <input 
                     type="number" 
                     min="1" 
-                    className="border border-gray-300 px-3 py-1 rounded-lg w-16 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    max="100"
+                    className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={newObjective}
                     onChange={(e) => setNewObjective(parseInt(e.target.value) || 1)}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="whitespace-nowrap">Type d'agent:</label>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Type d&apos;agent</label>
                   <select
                     value={agentType}
                     onChange={(e) => setAgentType(e.target.value as "HOT" | "PROSPECT" | "DIGI")}
-                    className="border border-gray-300 px-3 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="HOT">HOT (3 RDV/h)</option>
                     <option value="PROSPECT">PROSPECT (2 RDV/h)</option>
                     <option value="DIGI">DIGI (5 RDV/h)</option>
                   </select>
                 </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Campagnes</label>
+                  <div className="flex items-center gap-4 pt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isCRM} 
+                        onChange={() => setIsCRM(!isCRM)} 
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                      />
+                      <span className="text-sm">CRM</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isDigital} 
+                        onChange={() => setIsDigital(!isDigital)} 
+                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" 
+                      />
+                      <span className="text-sm">Digital</span>
+                    </label>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button 
-                onClick={addAgent}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-              >
-                ➕ Ajouter un agent
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={resetAgents}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-              >
-                🔄 Réinitialiser tous les compteurs
-              </Button>
-              <Button 
-                onClick={exportToExcel}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors duration-200 shadow-md flex items-center gap-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-file-earmark-excel" viewBox="0 0 16 16">
-                  <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l-2.233 2.68a.5.5 0 0 0 .768.64L8 10.781l2.116 2.54a.5.5 0 0 0 .768-.641L8.651 10l2.233-2.68a.5.5 0 0 0-.768-.64L8 9.219l-2.116-2.54z"/>
-                  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
-                </svg>
-                Exporter vers Excel
-              </Button>
-            </div>
-          </div>
+              
+              <Separator />
+              
+              {/* Boutons d'action */}
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button 
+                  onClick={addAgent}
+                  className="bg-blue-600 hover:bg-blue-700 transition-colors duration-200 shadow-md"
+                  disabled={!newAgent.trim() || (!isCRM && !isDigital)}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Ajouter Agent
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={resetAgents}
+                  className="border-red-300 text-red-700 hover:bg-red-50 transition-colors duration-200"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Réinitialiser Compteurs
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={exportToExcel}
+                  className="border-green-300 text-green-700 hover:bg-green-50 transition-colors duration-200"
+                  disabled={agents.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Exporter Excel
+                </Button>
+              </div>
+            </CardContent>
+            </Card>
+          </BlurFade>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <TopAgents 
-              title="🏅 Top 5 CRM" 
-              agents={topCRMAgents}
-              type="currentCRM"
-            />
+            <BlurFade delay={1.25} inView>
+              <TopAgents 
+                title="🏅 Top 5 CRM" 
+                agents={topAgents.crm}
+                type="currentCRM"
+              />
+            </BlurFade>
 
-            <AppointmentSection
-              title="📋 RDV CRM"
-              agents={agents}
-              type="currentCRM"
-              rdvTotal={rdvCRMTotal}
-              setRdvTotal={setRdvCRMTotal}
-              onDispatchRdv={dispatchRdv}
-              onRemoveAgent={removeAgent}
-              onUpdateCount={updateCount}
-              onUpdateHours={updateAgentHours}
-            />
+            <BlurFade delay={1.5} inView>
+              <AppointmentSection
+                title="📋 RDV CRM"
+                agents={agents}
+                type="currentCRM"
+                rdvTotal={rdvCRMTotal}
+                setRdvTotal={setRdvCRMTotal}
+                onDispatchRdv={dispatchRdv}
+                onRemoveAgent={removeAgent}
+                onUpdateCount={updateCount}
+                onUpdateHours={updateAgentHours}
+              />
+            </BlurFade>
 
-            <TopAgents 
-              title="🏅 Top 5 Digitaux" 
-              agents={topDigitalAgents}
-              type="currentDigital"
-            />
+            <BlurFade delay={1.75} inView>
+              <TopAgents 
+                title="🏅 Top 5 Digitaux" 
+                agents={topAgents.digital}
+                type="currentDigital"
+              />
+            </BlurFade>
 
-            <AppointmentSection
-              title="💻 RDV Digitaux"
-              agents={agents}
-              type="currentDigital"
-              rdvTotal={rdvDigitalTotal}
-              setRdvTotal={setRdvDigitalTotal}
-              onDispatchRdv={dispatchRdv}
-              onRemoveAgent={removeAgent}
-              onUpdateCount={updateCount}
-              onUpdateHours={updateAgentHours}
-            />
+            <BlurFade delay={2.0} inView>
+              <AppointmentSection
+                title="💻 RDV Digitaux"
+                agents={agents}
+                type="currentDigital"
+                rdvTotal={rdvDigitalTotal}
+                setRdvTotal={setRdvDigitalTotal}
+                onDispatchRdv={dispatchRdv}
+                onRemoveAgent={removeAgent}
+                onUpdateCount={updateCount}
+                onUpdateHours={updateAgentHours}
+              />
+            </BlurFade>
           </div>
           <div className="lg:col-span-1 space-y-8">
-            <ActivityFeed />
-            {isAdmin && <AlertSettings />}
-            <div className="mt-8 flex justify-end">
-              <TeamPresenceIndicator />
-            </div>
+            <BlurFade delay={2.25} inView>
+              <ActivityFeed />
+            </BlurFade>
+            {isAdmin && (
+              <BlurFade delay={2.5} inView>
+                <AlertSettings />
+              </BlurFade>
+            )}
+            <BlurFade delay={2.75} inView>
+              <div className="mt-8 flex justify-end">
+                <TeamPresenceIndicator />
+              </div>
+            </BlurFade>
           </div>
         </div>
 
-        <div className="text-center pt-8 pb-4">
-          <p className="text-sm text-gray-500">
-            POINT RDV - Développé par hatim - version 1.0
-          </p>
-        </div>
+        <BlurFade delay={3.0} inView>
+          <div className="text-center pt-8 pb-4">
+            <p className="text-sm text-gray-500">
+              POINT RDV - Développé par Hatim - Version 2.0 Enhanced
+            </p>
+          </div>
+        </BlurFade>
       </div>
     </div>
   );
